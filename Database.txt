@@ -1,5 +1,5 @@
 product=Agrita Exclusive Women Wear
-price=299222
+price=299333
 whatsapp=628978576622
 XS=5
 S=8
