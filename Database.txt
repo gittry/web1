@@ -1,0 +1,9 @@
+product=Agrita Exclusive Women Wear
+price=299000
+whatsapp=628123456789
+XS=5
+S=8
+M=10
+L=7
+XL=4
+XXL=2
