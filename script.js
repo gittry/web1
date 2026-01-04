@@ -148,6 +148,8 @@ function updateSummary() {
 
   if (selectedShipping === "Kirim") {
     const addr = [
+      fullName.value,
+      phoneNumber.value,
       street.value,
       district.value,
       city.value,
