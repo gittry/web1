@@ -5,10 +5,10 @@
     <title>AGRITA ONLINE JASTIP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- CSS (akan dibuat terpisah) -->
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Font elegan minimalis -->
+    <!-- Font Elegan -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 
@@ -17,12 +17,27 @@
 <!-- ================= HEADER ================= -->
 <header class="header">
     <h1>AGRITA ONLINE JASTIP</h1>
-    <p class="tagline">Elegan • Minimalis • Trusted Jastip</p>
+    <p class="tagline">Elegan • Minimalis • Wanita Modern</p>
 </header>
+
+<!-- ================= NAMA PEMBELI ================= -->
+<section class="buyer-section">
+    <input 
+        type="text" 
+        id="buyerName" 
+        placeholder="Masukkan Nama Anda"
+        autocomplete="name"
+    >
+</section>
 
 <!-- ================= SLIDER ================= -->
 <section class="slider-container">
-    <div class="slider">
+
+    <!-- Tombol Slide -->
+    <button class="slide-btn left" id="slideLeft">‹</button>
+    <button class="slide-btn right" id="slideRight">›</button>
+
+    <div class="slider" id="imageSlider">
         <img src="image1.jpg" alt="Produk 1">
         <img src="image2.jpg" alt="Produk 2">
         <img src="image3.jpg" alt="Produk 3">
@@ -34,11 +49,11 @@
 <section class="product-section">
 
     <h2 class="product-name" id="productName">
-        Agrita Exclusive Women Wear
+        Nama Produk
     </h2>
 
     <p class="price" id="productPrice">
-        Rp 299.000
+        Rp 0
     </p>
 
     <!-- ===== PILIH UKURAN ===== -->
@@ -71,20 +86,19 @@
         </div>
     </div>
 
-    <!-- ===== FORM ALAMAT (MUNCUL JIKA KIRIM) ===== -->
+    <!-- ===== FORM ALAMAT ===== -->
     <div class="address-form" id="addressForm">
 
         <h3>Alamat Pengiriman</h3>
 
         <input type="text" id="fullName" placeholder="Nama Lengkap">
-        <input type="tel" id="phoneNumber" placeholder="Nomor WhatsApp Aktif">
+        <input type="tel" id="phoneNumber" placeholder="Nomor WhatsApp">
 
-        <input type="text" id="street" placeholder="Nama Jalan & Nomor Rumah">
+        <input type="text" id="street" placeholder="Jalan & Nomor Rumah">
         <input type="text" id="district" placeholder="Kecamatan">
         <input type="text" id="city" placeholder="Kota / Kabupaten">
         <input type="text" id="province" placeholder="Provinsi">
         <input type="text" id="postalCode" placeholder="Kode Pos">
-
     </div>
 
     <!-- ================= RINGKASAN ================= -->
@@ -93,6 +107,7 @@
         <h3>Ringkasan Pesanan</h3>
 
         <div class="summary-box">
+            <p><strong>Nama:</strong> <span id="summaryBuyer">-</span></p>
             <p><strong>Produk:</strong> <span id="summaryProduct">-</span></p>
             <p><strong>Harga:</strong> <span id="summaryPrice">-</span></p>
             <p><strong>Ukuran:</strong> <span id="summarySize">-</span></p>
@@ -102,7 +117,7 @@
 
     </section>
 
-    <!-- ================= TOMBOL WHATSAPP ================= -->
+    <!-- ================= WHATSAPP ================= -->
     <button id="whatsappButton" class="wa-button">
         Setuju & Kirim ke WhatsApp
     </button>
@@ -114,7 +129,7 @@
     <p>© 2026 AGRITA ONLINE JASTIP</p>
 </footer>
 
-<!-- JavaScript (akan dibuat terpisah) -->
+<!-- ================= SCRIPT ================= -->
 <script src="script.js"></script>
 
 </body>
