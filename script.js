@@ -30,10 +30,16 @@ const summarySize = document.getElementById("summarySize");
 const summaryShipping = document.getElementById("summaryShipping");
 const summaryAddress = document.getElementById("summaryAddress");
 
-/* ================= INIT BUTTON ================= */
-waButton.disabled = true;
-waButton.style.opacity = "0.5";
-waButton.style.cursor = "not-allowed";
+/* ================= WARNING TEXT ================= */
+let warningText = document.getElementById("formWarning");
+if (!warningText) {
+  warningText = document.createElement("div");
+  warningText.id = "formWarning";
+  warningText.style.color = "#c62828";
+  warningText.style.fontSize = "0.8rem";
+  warningText.style.marginTop = "10px";
+  waButton.parentNode.insertBefore(warningText, waButton);
+}
 
 /* ================= LOAD DATABASE ================= */
 fetch(DB_URL)
@@ -111,7 +117,7 @@ shippingRadios.forEach(radio => {
 ].forEach(el => el.addEventListener("input", updateSummary));
 
 /* ================= VALIDATION ================= */
-function checkValidation() {
+function getMissingFields() {
   let missing = [];
 
   if (!buyerName.value) missing.push("Nama Pembeli");
@@ -127,17 +133,7 @@ function checkValidation() {
     if (!postalCode.value) missing.push("Kode Pos");
   }
 
-  if (missing.length > 0) {
-    waButton.disabled = true;
-    waButton.style.opacity = "0.5";
-    waButton.innerText = "Lengkapi: " + missing.join(", ");
-    return false;
-  } else {
-    waButton.disabled = false;
-    waButton.style.opacity = "1";
-    waButton.innerText = "Kirim Pesanan via WhatsApp";
-    return true;
-  }
+  return missing;
 }
 
 /* ================= UPDATE SUMMARY ================= */
@@ -165,12 +161,27 @@ function updateSummary() {
     summaryAddress.innerText = "-";
   }
 
-  checkValidation();
+  const missing = getMissingFields();
+
+  if (missing.length > 0) {
+    waButton.style.opacity = "0.5";
+    waButton.style.cursor = "not-allowed";
+    warningText.innerText = "Harap lengkapi: " + missing.join(", ");
+  } else {
+    waButton.style.opacity = "1";
+    waButton.style.cursor = "pointer";
+    warningText.innerText = "";
+  }
 }
 
 /* ================= WHATSAPP ================= */
 waButton.addEventListener("click", () => {
-  if (!checkValidation()) return;
+  const missing = getMissingFields();
+
+  if (missing.length > 0) {
+    warningText.innerText = "Harap lengkapi: " + missing.join(", ");
+    return;
+  }
 
   const message = `
 *PESANAN AGRITA ONLINE JASTIP*
