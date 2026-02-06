@@ -10,19 +10,64 @@
             padding: 0;
             background-color: #FFB6C1;
             font-family: monospace;
-            overflow-y: scroll;
+            overflow: hidden; /* Sementara hilangkan scroll saat loading */
             height: 100vh;
             transition: background-color 0.5s ease;
         }
 
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: #FFB6C1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255,105,180,0.8);
+        }
+
+        .heart-loader {
+            font-size: 60px;
+            animation: pulse 1.5s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50%      { transform: scale(1.3); opacity: 1; }
+        }
+
+        .hearts-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .small-heart {
+            font-size: 28px;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        .small-heart:nth-child(1) { animation-delay: 0s; }
+        .small-heart:nth-child(2) { animation-delay: 0.4s; }
+        .small-heart:nth-child(3) { animation-delay: 0.8s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%      { transform: translateY(-30px) rotate(15deg); }
+        }
+
         #visualization {
             white-space: pre;
-            font-size: 14px; /* Sedikit lebih kecil agar muat lebih banyak bar */
+            font-size: 14px;
             text-align: center;
             line-height: 1.05;
             position: relative;
             z-index: 1;
-            padding: 45vh 0 45vh 0; /* Ruang atas-bawah agar playhead bisa lewati seluruh waveform */
+            padding: 45vh 0 45vh 0;
+            display: none; /* Sembunyikan dulu sampai loading selesai */
         }
 
         #playhead {
@@ -35,6 +80,7 @@
             transform: translateY(-50%);
             z-index: 5;
             pointer-events: none;
+            display: none;
         }
 
         #tutorial {
@@ -51,6 +97,7 @@
             color: #111;
             max-width: 92%;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            display: none; /* Muncul setelah loading */
         }
 
         #tutorial.error {
@@ -66,6 +113,16 @@
     </style>
 </head>
 <body>
+    <div id="loading">
+        <div class="heart-loader">❤️</div>
+        <div class="hearts-container">
+            <span class="small-heart">❤️</span>
+            <span class="small-heart">💗</span>
+            <span class="small-heart">💖</span>
+        </div>
+        <p style="margin-top: 40px;">Memuat audio...</p>
+    </div>
+
     <div id="playhead"></div>
     <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio mengikuti posisi garis putih tengah di waveform.<br>Tutorial hilang setelah pertama kali scroll</div>
     <div id="visualization"></div>
@@ -76,6 +133,8 @@
         const audio = document.getElementById('audio');
         const vis = document.getElementById('visualization');
         const tutorial = document.getElementById('tutorial');
+        const loading = document.getElementById('loading');
+        const playhead = document.getElementById('playhead');
         const body = document.body;
 
         let waveform = [];
@@ -98,7 +157,7 @@
                 await audio.load();
 
                 const data = buffer.getChannelData(0);
-                const targetSamples = 8000; // Jumlah bar ≈ 8000 → cukup panjang tapi tidak terlalu ekstrem
+                const targetSamples = 8000;
                 const step = Math.floor(data.length / targetSamples);
                 waveform = [];
 
@@ -115,19 +174,33 @@
                 }
 
                 renderWaveform();
+
+                // Selesai loading → tampilkan konten utama
+                loading.style.display = 'none';
+                vis.style.display = 'block';
+                playhead.style.display = 'block';
+                tutorial.style.display = 'block';
+                body.style.overflowY = 'scroll';
+
             } catch (err) {
                 console.error(err);
-                tutorial.innerHTML = `GAGAL MEMUAT FILE AUDIO<br><br>sound.mp3 tidak ditemukan, rusak, atau format salah.<br>Pastikan file ada di folder yang sama.<br><small>${err.message}</small>`;
-                tutorial.classList.add('error');
+                loading.innerHTML = `
+                    <div class="heart-loader" style="color:#c00;">❌</div>
+                    <p style="color:#c00; font-size:22px; margin-top:30px;">
+                        GAGAL MEMUAT AUDIO<br><br>
+                        sound.mp3 tidak ditemukan atau rusak.<br>
+                        Pastikan file ada di folder yang sama.<br>
+                        <small>${err.message}</small>
+                    </p>
+                `;
             }
         }
 
         function renderWaveform() {
-            const maxHearts = 60; // Maksimal 60 emoji per bar (sesuai permintaan)
+            const maxHearts = 60;
             let html = '';
 
             waveform.forEach(amp => {
-                // Skala amplitude ke 0–60 hati
                 const count = Math.max(1, Math.min(maxHearts, Math.round(amp * maxHearts * 1.6)));
                 const padding = Math.max(0, Math.floor((maxHearts - count) / 2));
                 html += ' '.repeat(padding) + '❤️'.repeat(count) + '\n';
@@ -135,8 +208,7 @@
 
             vis.innerHTML = html;
 
-            // Tinggi halaman disesuaikan agar waveform terasa penuh
-            const lineHeightPx = 15; // ≈ font-size + line-height
+            const lineHeightPx = 15;
             const totalHeight = waveform.length * lineHeightPx + window.innerHeight * 1.8;
             document.documentElement.style.height = totalHeight + 'px';
         }
@@ -160,15 +232,14 @@
                 tutorial.style.display = 'none';
             }
 
-            if (direction === 1 && !audio.paused) {
-                // Play hanya saat bergerak maju (ke bawah/swipe up)
+            if (direction === 1) {
                 const playPromise = audio.play();
                 if (playPromise) playPromise.catch(() => {});
                 body.classList.add('glow-pink');
 
                 clearTimeout(timeoutGlow);
                 timeoutGlow = setTimeout(() => body.classList.remove('glow-pink'), 600);
-            } else if (direction === -1) {
+            } else {
                 audio.pause();
                 body.classList.remove('glow-pink');
             }
@@ -177,6 +248,7 @@
         window.addEventListener('scroll', updatePlayhead);
         window.addEventListener('touchmove', updatePlayhead, { passive: true });
 
+        // Mulai proses loading
         initAudio();
 
         document.addEventListener('visibilitychange', () => {
