@@ -1,259 +1,670 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Love Waveform Audio Player</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #FFB6C1;
-            font-family: monospace;
-            overflow: hidden; /* Sementara hilangkan scroll saat loading */
-            height: 100vh;
-            transition: background-color 0.5s ease;
-        }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Heart Waveform Player</title>
+<style>
+  :root{
+    --bg:#FFB6C1;
+    --pink-glow:#FF69B4;
+    --heart-max:60;
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    -webkit-user-select:none;
+    user-select:none;
+    touch-action: pan-y;
+    -webkit-touch-callout:none;
+    overflow:hidden; /* disabled until loaded */
+  }
 
-        #loading {
-            position: fixed;
-            inset: 0;
-            background: #FFB6C1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            font-size: 24px;
-            text-shadow: 0 0 10px rgba(255,105,180,0.8);
-        }
+  /* glow overlay */
+  body.glow::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background: radial-gradient(ellipse at center, rgba(255,105,180,0.12) 0%, rgba(255,105,180,0.03) 30%, transparent 60%);
+    box-shadow: 0 0 120px 40px rgba(255,105,180,0.12), inset 0 0 120px rgba(255,105,180,0.04);
+    transition: opacity .25s ease;
+    z-index:5;
+    opacity:1;
+  }
 
-        .heart-loader {
-            font-size: 60px;
-            animation: pulse 1.5s infinite ease-in-out;
-            margin-bottom: 20px;
-        }
+  /* Center container for waveform (holds pre) */
+  #app{
+    position:relative;
+    min-height:100%;
+    width:100%;
+    overflow-x:hidden;
+  }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50%      { transform: scale(1.3); opacity: 1; }
-        }
+  /* Waveform area */
+  #waveWrap{
+    display:block;
+    width:100%;
+    max-width:100%;
+    margin:0 auto;
+    box-sizing:border-box;
+    padding:0;
+  }
+  /* Use pre for monospace spacing */
+  pre#waveform{
+    margin:0 auto;
+    padding:0;
+    white-space:pre;
+    font-size:18px;            /* emoji size */
+    line-height:1.0;           /* tight packing */
+    letter-spacing:0px;
+    text-wrap:normal;
+    word-break:keep-all;
+    width:fit-content;
+    max-width:100vw;
+    overflow:visible;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    transform:translateZ(0); /* promote to its own layer */
+  }
 
-        .hearts-container {
-            display: flex;
-            gap: 12px;
-        }
+  /* Centering wrapper so the rows are horizontally centered on screen */
+  .wave-center{
+    display:flex;
+    justify-content:center;
+    width:100%;
+    padding-left:12px;
+    padding-right:12px;
+  }
 
-        .small-heart {
-            font-size: 28px;
-            animation: float 3s infinite ease-in-out;
-        }
+  /* Fixed playhead line (white) in vertical center */
+  #playhead{
+    position:fixed;
+    left:0;
+    right:0;
+    top:50%;
+    height:2px;
+    margin-top:-1px;
+    background:rgba(255,255,255,0.95);
+    box-shadow:0 0 8px rgba(255,255,255,0.8);
+    z-index:10;
+    pointer-events:none;
+  }
 
-        .small-heart:nth-child(1) { animation-delay: 0s; }
-        .small-heart:nth-child(2) { animation-delay: 0.4s; }
-        .small-heart:nth-child(3) { animation-delay: 0.8s; }
+  /* Tutorial overlay after loaded */
+  #tutorial{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.95);
+    color:#222;
+    padding:18px 22px;
+    border-radius:12px;
+    text-align:center;
+    z-index:20;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    max-width:90%;
+    font-size:16px;
+    line-height:1.35;
+    display:none; /* shown after loaded */
+  }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50%      { transform: translateY(-30px) rotate(15deg); }
-        }
+  /* Loading overlay */
+  #loadingOverlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:50;
+    background:linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.02) 100%);
+    pointer-events:auto;
+  }
 
-        #visualization {
-            white-space: pre;
-            font-size: 14px;
-            text-align: center;
-            line-height: 1.05;
-            position: relative;
-            z-index: 1;
-            padding: 45vh 0 45vh 0;
-            display: none; /* Sembunyikan dulu sampai loading selesai */
-        }
+  .loadingBox{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:16px;
+    text-align:center;
+    color:#fff;
+  }
 
-        #playhead {
-            position: fixed;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: white;
-            transform: translateY(-50%);
-            z-index: 5;
-            pointer-events: none;
-            display: none;
-        }
+  .big-heart{
+    font-size:96px;
+    transform-origin:center;
+    animation:pulse 1.1s infinite ease-in-out;
+    filter: drop-shadow(0 8px 24px rgba(255,105,180,0.35));
+  }
 
-        #tutorial {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.93);
-            padding: 28px 45px;
-            border-radius: 16px;
-            z-index: 10;
-            text-align: center;
-            font-size: 20px;
-            color: #111;
-            max-width: 92%;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            display: none; /* Muncul setelah loading */
-        }
+  @keyframes pulse{
+    0%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.12); opacity:0.92; }
+    100%{ transform:scale(1); opacity:1; }
+  }
 
-        #tutorial.error {
-            background: rgba(255, 210, 210, 0.97);
-            color: #b00;
-            border: 2px solid #b00;
-        }
+  /* floating hearts */
+  .float-heart{
+    position:absolute;
+    font-size:20px;
+    animation:floatUp linear infinite;
+    opacity:0.9;
+    pointer-events:none;
+    filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08));
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(30px) scale(.9); opacity:0; }
+    10%{ opacity:1; }
+    100%{ transform:translateY(-260px) scale(1.2); opacity:0; }
+  }
 
-        .glow-pink {
-            background-color: #FF69B4 !important;
-            box-shadow: 0 0 50px #FF69B4, inset 0 0 40px #FF1493;
-        }
-    </style>
+  .loadingText{
+    color:#fff;
+    font-size:20px;
+    font-weight:600;
+    text-shadow:0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  /* Error styling (keeps overlay visible) */
+  #loadingOverlay.error .loadingBox .loadingText{
+    color:#ffdddd;
+    background:rgba(255,0,0,0.02);
+    padding:8px 10px;
+    border-radius:8px;
+  }
+  #loadingOverlay.error .loadingBox .errorDetail{
+    color:#990000;
+    background:#fff3f3;
+    padding:10px;
+    margin-top:8px;
+    border-radius:8px;
+    font-size:13px;
+    color:#660000;
+    max-width:80vw;
+    white-space:pre-wrap;
+    text-align:left;
+  }
+
+  /* make sure page scroll smooth */
+  html,body{
+    scroll-behavior:smooth;
+  }
+
+  /* small helper for hiding/showing */
+  .hidden{ display:none !important; }
+
+  /* Ensure waveform rows don't cause horizontal scroll */
+  #wrapScroller{
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  /* For accessibility - visually hidden */
+  .visually-hidden{
+    position:absolute;
+    left:-9999px;
+  }
+
+  @media (max-width:420px){
+    pre#waveform{ font-size:16px; }
+    .big-heart{ font-size:76px; }
+    .loadingText{ font-size:18px; }
+  }
+</style>
 </head>
 <body>
-    <div id="loading">
-        <div class="heart-loader">❤️</div>
-        <div class="hearts-container">
-            <span class="small-heart">❤️</span>
-            <span class="small-heart">💗</span>
-            <span class="small-heart">💖</span>
-        </div>
-        <p style="margin-top: 40px;">Memuat audio...</p>
+  <div id="app" aria-hidden="false">
+    <div id="wrapScroller">
+      <div id="waveWrap" class="wave-center" aria-hidden="true">
+        <pre id="waveform" aria-hidden="true"></pre>
+      </div>
     </div>
 
-    <div id="playhead"></div>
-    <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio mengikuti posisi garis putih tengah di waveform.<br>Tutorial hilang setelah pertama kali scroll</div>
-    <div id="visualization"></div>
+    <div id="playhead" aria-hidden="true"></div>
 
-    <audio id="audio" preload="auto"></audio>
+    <div id="tutorial" role="dialog" aria-modal="true">
+      <div style="font-weight:700; margin-bottom:8px;">Swipe up / gulir ke bawah untuk memutar lagu</div>
+      <div>Audio mengikuti posisi garis putih tengah di waveform.<br><small style="opacity:.8">Tutorial hilang setelah pertama kali scroll</small></div>
+    </div>
 
-    <script>
-        const audio = document.getElementById('audio');
-        const vis = document.getElementById('visualization');
-        const tutorial = document.getElementById('tutorial');
-        const loading = document.getElementById('loading');
-        const playhead = document.getElementById('playhead');
-        const body = document.body;
+    <!-- Loading overlay (also error) -->
+    <div id="loadingOverlay" role="status" aria-live="polite">
+      <div class="loadingBox" aria-hidden="false">
+        <div class="big-heart" aria-hidden="true">❤️</div>
+        <div class="loadingText">Memuat audio...</div>
+        <div style="font-size:13px; opacity:0.92;">(Memindai file lokal: <code>sound.mp3</code>)</div>
+        <div class="errorDetail visually-hidden" id="errorDetail" aria-hidden="true"></div>
+      </div>
+    </div>
 
-        let waveform = [];
-        let duration = 0;
-        let lastScrollY = window.scrollY;
-        let timeoutGlow = null;
-        let hasInteracted = false;
+    <!-- Hidden audio element for playback controls -->
+    <audio id="audio" src="sound.mp3" crossorigin="anonymous"></audio>
+  </div>
 
-        async function initAudio() {
-            try {
-                const resp = await fetch('sound.mp3');
-                if (!resp.ok) throw new Error(`Status: ${resp.status}`);
+<script>
+(async function(){
+  // Configuration
+  const BARS = 8000;               // ~8000 vertical bars
+  const MAX_HEARTS = 60;          // maximum hearts per row
+  const LINE_HEIGHT_PX = 22;      // approximate line height (will match CSS font-size*line-height)
+  const GLOW_TIMEOUT = 600;       // ms to fade glow
+  const waveformPre = document.getElementById('waveform');
+  const waveWrap = document.getElementById('waveWrap');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = loadingOverlay.querySelector('.loadingText');
+  const errorDetailEl = document.getElementById('errorDetail');
+  const tutorial = document.getElementById('tutorial');
+  const playhead = document.getElementById('playhead');
+  const audioEl = document.getElementById('audio');
 
-                const ab = await resp.arrayBuffer();
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const buffer = await ctx.decodeAudioData(ab);
+  let audioCtx = null;
+  let decodedBuffer = null;
+  let isLoaded = false;
+  let lastScrollY = 0;
+  let glowTimer = null;
+  let tutorialSeen = localStorage.getItem('tutorialSeen') === '1';
+  let userInteracted = false;
+  let lastTouchY = null;
+  let isPlayingByScroll = false;
+  let lastDirection = 0; // 1 forward, -1 backward
+  let raf = null;
+  let updateScheduled = false;
 
-                duration = buffer.duration;
-                audio.src = 'sound.mp3';
-                await audio.load();
+  // Helper: show error permanently
+  function showError(err){
+    console.error(err);
+    loadingOverlay.classList.add('error');
+    loadingText.textContent = 'GAGAL MEMUAT AUDIO – sound.mp3 tidak ditemukan atau rusak...';
+    errorDetailEl.classList.remove('visually-hidden');
+    errorDetailEl.textContent = (err && err.message) ? err.message : String(err);
+    errorDetailEl.setAttribute('aria-hidden','false');
+    // keep scrolling disabled
+    document.body.style.overflow = 'hidden';
+  }
 
-                const data = buffer.getChannelData(0);
-                const targetSamples = 8000;
-                const step = Math.floor(data.length / targetSamples);
-                waveform = [];
+  // Setup floating hearts in loading overlay
+  function spawnFloatingHearts(){
+    const container = loadingOverlay;
+    const hearts = ['❤️','💗','💖'];
+    for(let i=0;i<8;i++){
+      const el = document.createElement('div');
+      el.className = 'float-heart';
+      el.style.left = (10 + Math.random()*80) + '%';
+      el.style.bottom = (-20 - Math.random()*40) + 'px';
+      el.style.fontSize = (12 + Math.random()*28) + 'px';
+      el.style.opacity = 0;
+      el.style.animationDuration = (3 + Math.random()*3) + 's';
+      el.style.animationDelay = (Math.random()*1.2) + 's';
+      el.textContent = hearts[Math.floor(Math.random()*hearts.length)];
+      container.appendChild(el);
+    }
+  }
+  spawnFloatingHearts();
 
-                for (let i = 0; i < targetSamples; i++) {
-                    let sum = 0, count = 0;
-                    for (let j = 0; j < step; j++) {
-                        const val = data[i * step + j];
-                        if (!isNaN(val)) {
-                            sum += Math.abs(val);
-                            count++;
-                        }
-                    }
-                    waveform.push(count > 0 ? sum / count : 0);
-                }
+  // Disable scrolling initially
+  function disableScroll(){
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    // on mobile: prevent touchmove default unless enabled later
+    document.addEventListener('touchmove', preventDefaultPassive, {passive:false});
+  }
+  function enableScroll(){
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    document.removeEventListener('touchmove', preventDefaultPassive, {passive:false});
+  }
+  function preventDefaultPassive(e){ e.preventDefault(); }
 
-                renderWaveform();
+  disableScroll();
 
-                // Selesai loading → tampilkan konten utama
-                loading.style.display = 'none';
-                vis.style.display = 'block';
-                playhead.style.display = 'block';
-                tutorial.style.display = 'block';
-                body.style.overflowY = 'scroll';
+  // Init AudioContext on first user gesture to avoid autoplay policies
+  function ensureAudioContext(){
+    if (!audioCtx){
+      try{
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // connect audio element later
+      } catch(e){
+        console.warn("AudioContext not available:", e);
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended'){
+      audioCtx.resume().catch(()=>{/* might be blocked until gesture */});
+    }
+  }
 
-            } catch (err) {
-                console.error(err);
-                loading.innerHTML = `
-                    <div class="heart-loader" style="color:#c00;">❌</div>
-                    <p style="color:#c00; font-size:22px; margin-top:30px;">
-                        GAGAL MEMUAT AUDIO<br><br>
-                        sound.mp3 tidak ditemukan atau rusak.<br>
-                        Pastikan file ada di folder yang sama.<br>
-                        <small>${err.message}</small>
-                    </p>
-                `;
-            }
+  // Load and decode sound.mp3 via fetch + decodeAudioData
+  async function analyzeLocalAudio(){
+    try{
+      // fetch file
+      const resp = await fetch('sound.mp3', {cache:'no-store'});
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+      const arrayBuffer = await resp.arrayBuffer();
+
+      ensureAudioContext();
+      if(!audioCtx) throw new Error('AudioContext tidak tersedia di browser ini.');
+
+      // decode
+      decodedBuffer = await new Promise((resolve, reject) => {
+        audioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+      });
+
+      return decodedBuffer;
+    } catch(err){
+      throw err;
+    }
+  }
+
+  // Create waveform rows string for BARS rows
+  function makeWaveformText(buffer){
+    const channels = buffer.numberOfChannels;
+    const len = buffer.length;
+    const sr = buffer.sampleRate;
+    const duration = buffer.duration;
+    // We'll compute RMS per window
+    const windowSize = Math.max(1, Math.floor(len / BARS));
+    let lines = [];
+    const heartsUnit = '❤️';
+    for(let i=0;i<BARS;i++){
+      const start = Math.min(len-1, Math.floor(i * windowSize));
+      const end = Math.min(len, start + windowSize);
+      // compute average absolute amplitude across channels
+      let sum = 0;
+      let count = 0;
+      for(let ch=0; ch<channels; ch++){
+        const data = buffer.getChannelData(ch);
+        for(let s=start;s<end;s++){
+          sum += Math.abs(data[s]);
+          count++;
         }
+      }
+      const avg = count ? (sum / count) : 0;
+      // Map to [0..1] with simple soft compression
+      const amp = Math.pow(avg, 0.6); // gentle curve
+      let heartsCount = Math.round(amp * MAX_HEARTS);
+      if (heartsCount > MAX_HEARTS) heartsCount = MAX_HEARTS;
+      if (heartsCount < 0) heartsCount = 0;
+      // Center using spaces symmetric around center within width MAX_HEARTS
+      const leftSpaces = Math.floor((MAX_HEARTS - heartsCount)/2);
+      const rightSpaces = MAX_HEARTS - heartsCount - leftSpaces;
+      const left = ' '.repeat(leftSpaces);
+      const right = ' '.repeat(rightSpaces);
+      const hearts = heartsUnit.repeat(heartsCount);
+      lines.push(left + hearts + right);
+    }
+    // join with newline
+    return lines.join('\n');
+  }
 
-        function renderWaveform() {
-            const maxHearts = 60;
-            let html = '';
+  // After decoding, populate DOM with waveform and prepare UI
+  function renderWaveform(text){
+    waveformPre.textContent = text;
+    // set waveWrap padding such that the center playhead can map to the top and bottom nicely
+    // Add top & bottom padding to body scroll area equal to half viewport so playhead can reach ends
+    // We'll wrap the waveform in a container with padding top & bottom
+    const pad = Math.ceil(window.innerHeight/2);
+    // We'll add padding by a spacer element before and after pre
+    // But simpler: set margin on pre
+    waveformPre.style.marginTop = pad + 'px';
+    waveformPre.style.marginBottom = pad + 'px';
+    // set proper aria
+    waveWrap.setAttribute('aria-hidden', 'false');
+    waveformPre.setAttribute('aria-hidden', 'false');
+    // show center wrapper (already present)
+  }
 
-            waveform.forEach(amp => {
-                const count = Math.max(1, Math.min(maxHearts, Math.round(amp * maxHearts * 1.6)));
-                const padding = Math.max(0, Math.floor((maxHearts - count) / 2));
-                html += ' '.repeat(padding) + '❤️'.repeat(count) + '\n';
-            });
+  // Calculate currentTime from scroll position (center of viewport)
+  function computeTimeFromScroll(){
+    const rect = waveformPre.getBoundingClientRect();
+    const totalHeight = waveformPre.scrollHeight + parseFloat(getComputedStyle(waveformPre).marginTop || 0) + parseFloat(getComputedStyle(waveformPre).marginBottom || 0);
+    // The absolute top of waveform relative to document
+    const topOfWave = window.scrollY + rect.top;
+    // center Y of viewport in document coords
+    const centerY = window.scrollY + window.innerHeight/2;
+    let relative = (centerY - topOfWave) / totalHeight;
+    if (relative < 0) relative = 0;
+    if (relative > 1) relative = 1;
+    const dur = decodedBuffer ? decodedBuffer.duration : (audioEl.duration || 0);
+    return relative * dur;
+  }
 
-            vis.innerHTML = html;
+  // Update audio currentTime to match center; direction matters for play/pause behaviour
+  function syncAudioOnScroll(){
+    if (!decodedBuffer) return;
+    const desired = computeTimeFromScroll();
+    // Determine direction
+    const currentScrollY = window.scrollY;
+    const direction = (currentScrollY > lastScrollY) ? 1 : (currentScrollY < lastScrollY ? -1 : lastDirection);
+    lastDirection = direction;
+    lastScrollY = currentScrollY;
 
-            const lineHeightPx = 15;
-            const totalHeight = waveform.length * lineHeightPx + window.innerHeight * 1.8;
-            document.documentElement.style.height = totalHeight + 'px';
-        }
+    // Apply glow if forward
+    if (direction === 1){
+      document.body.classList.add('glow');
+      // play audio (forward)
+      try{
+        // set time first, then play
+        audioEl.currentTime = Math.max(0, Math.min(audioEl.duration || 0, desired));
+      } catch(e){}
+      // Play with user gesture safety - ensure audio context resumed
+      ensureAudioContext();
+      // connect audio element to audioCtx if not connected
+      if (audioCtx && !audioEl._connected){
+        try{
+          const src = audioCtx.createMediaElementSource(audioEl);
+          src.connect(audioCtx.destination);
+          audioEl._connected = true;
+        }catch(e){}
+      }
+      // start playback
+      audioEl.play().catch(()=>{/* may be blocked until gesture */});
+      isPlayingByScroll = true;
+    } else if (direction === -1){
+      // backward: pause immediately and update currentTime
+      try{ audioEl.pause(); } catch(e){}
+      isPlayingByScroll = false;
+      // update time but don't play backward
+      try{
+        audioEl.currentTime = Math.max(0, Math.min(audioEl.duration || 0, desired));
+      } catch(e){}
+      // small glow effect still when user interacts? spec says glowing only on forward
+    } else {
+      // no movement - keep state
+      try{
+        audioEl.currentTime = Math.max(0, Math.min(audioEl.duration || 0, desired));
+      } catch(e){}
+    }
 
-        function updatePlayhead() {
-            if (tutorial.classList.contains('error')) return;
+    // schedule glow fade
+    if (glowTimer) clearTimeout(glowTimer);
+    glowTimer = setTimeout(()=>{
+      document.body.classList.remove('glow');
+    }, GLOW_TIMEOUT);
+  }
 
-            const scrollTop = window.scrollY;
-            const vh = window.innerHeight;
-            const totalH = document.documentElement.scrollHeight || document.body.scrollHeight;
-            const progress = Math.max(0, Math.min(1, (scrollTop + vh / 2) / totalH));
+  // Debounced raf update to follow scroll smoothly without hogging events
+  function scheduleSync(){
+    if (updateScheduled) return;
+    updateScheduled = true;
+    raf = requestAnimationFrame(()=>{
+      updateScheduled = false;
+      syncAudioOnScroll();
+    });
+  }
 
-            const time = progress * duration;
-            audio.currentTime = time;
+  // On user gestures: resume audioContext and audio element connect
+  function handleUserInteraction(){
+    if (userInteracted) return;
+    userInteracted = true;
+    ensureAudioContext();
+    if (audioCtx && audioCtx.state === 'suspended'){
+      audioCtx.resume().catch(()=>{/* ignore */});
+    }
+    // connect audio element to audioCtx for playback (if loaded)
+    try{
+      if (audioCtx && !audioEl._connected){
+        const src = audioCtx.createMediaElementSource(audioEl);
+        src.connect(audioCtx.destination);
+        audioEl._connected = true;
+      }
+    } catch(e){}
+  }
 
-            const direction = scrollTop > lastScrollY ? 1 : -1;
-            lastScrollY = scrollTop;
+  // Attach events for scroll/touch
+  function attachScrollHandlers(){
+    // On scroll event
+    window.addEventListener('scroll', (e)=>{
+      // on first scroll, hide tutorial if present
+      if (!tutorialSeen){
+        tutorialSeen = true;
+        localStorage.setItem('tutorialSeen','1');
+        tutorial.style.display = 'none';
+      }
+      scheduleSync();
+    }, {passive:true});
 
-            if (!hasInteracted) {
-                hasInteracted = true;
-                tutorial.style.display = 'none';
-            }
+    // touch handling for mobiles: detect direction from touchmove
+    window.addEventListener('touchstart', (e)=>{
+      handleUserInteraction();
+      if (e.touches && e.touches[0]) lastTouchY = e.touches[0].clientY;
+    }, {passive:true});
 
-            if (direction === 1) {
-                const playPromise = audio.play();
-                if (playPromise) playPromise.catch(() => {});
-                body.classList.add('glow-pink');
+    window.addEventListener('touchmove', (e)=>{
+      if (e.touches && e.touches[0]){
+        const current = e.touches[0].clientY;
+        const dy = (lastTouchY == null) ? 0 : (lastTouchY - current);
+        lastTouchY = current;
+        // we'll let native scrolling happen; we only need to set direction
+        // but to ensure immediate response we call scheduleSync
+        scheduleSync();
+      }
+    }, {passive:true});
 
-                clearTimeout(timeoutGlow);
-                timeoutGlow = setTimeout(() => body.classList.remove('glow-pink'), 600);
-            } else {
-                audio.pause();
-                body.classList.remove('glow-pink');
-            }
-        }
+    window.addEventListener('touchend', (e)=>{
+      lastTouchY = null;
+    });
 
-        window.addEventListener('scroll', updatePlayhead);
-        window.addEventListener('touchmove', updatePlayhead, { passive: true });
+    // mouse wheel for desktop
+    window.addEventListener('wheel', (e)=>{
+      handleUserInteraction();
+      scheduleSync();
+    }, {passive:true});
 
-        // Mulai proses loading
-        initAudio();
+    // Pause audio when page hidden
+    document.addEventListener('visibilitychange', ()=>{
+      if (document.hidden){
+        try{ audioEl.pause(); }catch(e){}
+      }
+    });
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) audio.pause();
-        });
-    </script>
+    // audio ended - set play state false
+    audioEl.addEventListener('ended', ()=>{
+      isPlayingByScroll = false;
+      document.body.classList.remove('glow');
+    });
+  }
+
+  // After waveform rendered, we need to set up scrollable area and show UI
+  function finalizeLoadedUI(){
+    // Hide loading overlay
+    loadingOverlay.style.display = 'none';
+    // Show playhead
+    playhead.style.display = 'block';
+    // Show waveform (already visible)
+    // Enable scrolling
+    enableScroll();
+    // Show tutorial if not seen
+    if (!tutorialSeen){
+      tutorial.style.display = 'block';
+    } else {
+      tutorial.style.display = 'none';
+    }
+    isLoaded = true;
+
+    // Ensure audio element is ready (set preload)
+    audioEl.preload = 'auto';
+
+    // Connect audio element to AudioContext if present
+    try{
+      if (audioCtx && !audioEl._connected){
+        const src = audioCtx.createMediaElementSource(audioEl);
+        src.connect(audioCtx.destination);
+        audioEl._connected = true;
+      }
+    }catch(e){}
+
+    // Make page scrollable to cover full song: We'll let pre content determine height; add small extra padding top/bottom already done in renderWaveform.
+    // Attach scroll event listeners
+    attachScrollHandlers();
+
+    // On load complete, set initial scroll to top (or keep at start)
+    // we'll position the playhead at start -> center maps to time 0
+    window.scrollTo({top:0});
+    // ensure one sync to set correct time
+    scheduleSync();
+  }
+
+  // Main: try to analyze and render waveform
+  try{
+    const decoded = await analyzeLocalAudio();
+    // Now we have decodedBuffer
+    // Build a text-based waveform representation (heavy) — run in microtask to avoid blocking too long
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const waveformText = makeWaveformText(decoded);
+    renderWaveform(waveformText);
+
+    // Hide loading overlay after small timeout to allow user to see animation
+    setTimeout(() => {
+      finalizeLoadedUI();
+    }, 240); // small delay for UX
+
+    // Set tutorial to display only after loading
+    tutorial.style.display = tutorialSeen ? 'none' : 'block';
+    // mark waveform loaded
+    decodedBuffer = decoded;
+
+  } catch(err){
+    showError(err);
+    return;
+  }
+
+  // Listen to user interactions to resume audio context / enable play
+  ['touchstart','mousedown','pointerdown','keydown'].forEach(evt=>{
+    window.addEventListener(evt, handleUserInteraction, {once:true, passive:true});
+  });
+
+  // Edge: if audio element fails to load (different error) - show details
+  audioEl.addEventListener('error', (e)=>{
+    const err = audioEl.error;
+    const msg = err ? (`Code ${err.code} - ${err.message || 'Unknown error'}`) : 'Unknown audio element error';
+    showError(new Error(msg));
+  });
+
+  // Prevent the audio from auto-playing until user scrolls forward:
+  // But allow playback via user-initiated events
+
+  // Ensure that initial scroll position triggers correct mapping (in case loaded at non-zero)
+  setTimeout(() => scheduleSync(), 100);
+
+  // Accessibility: let user press space or arrow to scroll/control timeline
+  window.addEventListener('keydown', (e)=>{
+    if (!isLoaded) return;
+    if (['ArrowDown','PageDown',' '].includes(e.key)){
+      e.preventDefault();
+      window.scrollBy({top: window.innerHeight/8, behavior:'smooth'});
+    } else if (['ArrowUp','PageUp'].includes(e.key)){
+      e.preventDefault();
+      window.scrollBy({top: -window.innerHeight/8, behavior:'smooth'});
+    }
+  });
+
+})();
+</script>
 </body>
 </html>
