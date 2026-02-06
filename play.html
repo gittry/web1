@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Visualization with Love Emojis</title>
+    <title>Love Waveform Audio Player</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #FFB6C1; /* Pink muda (light pink) */
-            font-family: monospace; /* Untuk tampilan text art yang konsisten */
-            overflow-y: scroll; /* Pastikan scroll vertikal aktif */
+            background-color: #FFB6C1; /* Pink muda */
+            font-family: monospace;
+            overflow-y: scroll;
             height: 100vh;
-            transition: background-color 0.3s ease; /* Untuk efek glow transisi */
+            transition: background-color 0.4s ease;
         }
 
         #visualization {
-            white-space: pre; /* Pertahankan spasi dan baris baru */
-            font-size: 16px; /* Ukuran emoji */
-            text-align: center; /* Center the waveform */
-            line-height: 1; /* Tanpa spasi ekstra antar baris */
+            white-space: pre;
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.1;
             position: relative;
             z-index: 1;
+            padding: 40vh 0; /* Memberi ruang atas & bawah agar playhead bisa "lewati" waveform */
         }
 
         #playhead {
@@ -29,10 +30,11 @@
             top: 50%;
             left: 0;
             width: 100%;
-            height: 2px;
-            background-color: white; /* Garis putih */
+            height: 3px;
+            background: white;
             transform: translateY(-50%);
-            z-index: 2;
+            z-index: 5;
+            pointer-events: none;
         }
 
         #tutorial {
@@ -40,123 +42,147 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 3;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 25px 40px;
+            border-radius: 16px;
+            z-index: 10;
             text-align: center;
-            font-size: 18px;
-            color: #333;
+            font-size: 19px;
+            color: #222;
+            max-width: 90%;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        #tutorial.error {
+            background: rgba(255, 220, 220, 0.95);
+            color: #c00;
+            border: 2px solid #c00;
         }
 
         .glow-pink {
-            background-color: #FF69B4 !important; /* Pink lebih terang untuk efek glow */
-            box-shadow: 0 0 20px #FF69B4; /* Efek glow dengan shadow */
+            background-color: #FF69B4 !important;
+            box-shadow: 0 0 40px #FF69B4, inset 0 0 30px #FF1493;
         }
     </style>
 </head>
 <body>
     <div id="playhead"></div>
-    <div id="tutorial">Swipe up (or scroll down) to play the audio. Tutorial will disappear after first scroll.</div>
+    <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio akan mengikuti bagian waveform yang dilewati garis putih tengah.<br>(Tutorial hilang setelah pertama scroll)</div>
     <div id="visualization"></div>
 
-    <audio id="audio" src="sound.mp3"></audio>
+    <audio id="audio" preload="auto"></audio>
 
     <script>
         const audio = document.getElementById('audio');
-        const visualization = document.getElementById('visualization');
+        const vis = document.getElementById('visualization');
         const tutorial = document.getElementById('tutorial');
         const body = document.body;
 
-        let waveformData = []; // Array untuk data waveform (amplitude normalized)
+        let waveform = [];
         let duration = 0;
-        let lastScrollY = 0;
-        let isScrolling = false;
-        let scrollDirection = 0; // 1 untuk down (maju), -1 untuk up (mundur)
-        let hasScrolled = false;
+        let lastScrollY = window.scrollY;
+        let timeoutGlow = null;
+        let hasInteracted = false;
 
-        // Fungsi untuk load dan analisis audio menggunakan Web Audio API
-        async function loadAudio() {
-            const response = await fetch('sound.mp3');
-            const arrayBuffer = await response.arrayBuffer();
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        async function initAudio() {
+            try {
+                const resp = await fetch('sound.mp3');
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
-            duration = audioBuffer.duration;
-            const rawData = audioBuffer.getChannelData(0); // Ambil channel pertama (mono)
-            const samples = 10000; // Jumlah sampel untuk visualisasi (sesuaikan untuk panjang halaman)
-            const blockSize = Math.floor(rawData.length / samples);
-            waveformData = [];
+                const ab = await resp.arrayBuffer();
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const buffer = await ctx.decodeAudioData(ab);
 
-            for (let i = 0; i < samples; i++) {
-                let blockStart = i * blockSize;
-                let sum = 0;
-                for (let j = 0; j < blockSize; j++) {
-                    sum += Math.abs(rawData[blockStart + j]);
+                duration = buffer.duration;
+                audio.src = 'sound.mp3';
+                await audio.load();
+
+                // Analisis waveform
+                const data = buffer.getChannelData(0);
+                const targetSamples = 12000; // Semakin besar → waveform lebih halus & halaman lebih panjang
+                const step = Math.floor(data.length / targetSamples);
+                waveform = [];
+
+                for (let i = 0; i < targetSamples; i++) {
+                    let sum = 0;
+                    for (let j = 0; j < step; j++) {
+                        sum += Math.abs(data[i * step + j] || 0);
+                    }
+                    waveform.push(sum / step);
                 }
-                const avg = sum / blockSize;
-                waveformData.push(avg); // Simpan amplitude rata-rata
-            }
 
-            renderWaveform();
+                renderWaveform();
+            } catch (err) {
+                console.error(err);
+                tutorial.innerHTML = `GAGAL MEMUAT AUDIO<br><br>sound.mp3 tidak ditemukan, rusak, atau format tidak didukung.<br>Pastikan file ada di folder yang sama.<br><small>${err.message}</small>`;
+                tutorial.classList.add('error');
+            }
         }
 
-        // Render waveform sebagai emoji hati vertikal (dari atas ke bawah)
         function renderWaveform() {
-            const maxHearts = 20; // Maksimal hati per bar (skala tinggi)
-            let content = '';
+            const maxHearts = 22;
+            let html = '';
 
-            waveformData.forEach(amplitude => {
-                const heartCount = Math.floor(amplitude * maxHearts * 2) + 1; // Skala dan minimal 1
-                const leftPadding = Math.max(0, (maxHearts * 2 - heartCount) / 2); // Center alignment
-                content += ' '.repeat(leftPadding) + '❤️'.repeat(heartCount) + '\n';
+            waveform.forEach(amp => {
+                const count = 1 + Math.floor(amp * maxHearts * 1.8);
+                const pad = Math.max(0, Math.floor((maxHearts * 2 - count) / 2));
+                html += ' '.repeat(pad) + '❤️'.repeat(count) + '\n';
             });
 
-            visualization.innerHTML = content;
+            vis.innerHTML = html;
 
-            // Set tinggi body agar sesuai dengan visualisasi untuk scroll penuh
-            const lineHeight = 16; // Sesuaikan dengan font-size
-            document.documentElement.style.height = `${waveformData.length * lineHeight}px`;
+            // Set tinggi halaman agar sesuai waveform + ruang play
+            const approxLineHeight = 18;
+            const totalHeight = waveform.length * approxLineHeight + window.innerHeight * 1.5;
+            document.documentElement.style.height = totalHeight + 'px';
         }
 
-        // Handle scroll event
-        window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
-            scrollDirection = currentScrollY > lastScrollY ? 1 : -1; // 1: down (maju), -1: up (mundur)
-            lastScrollY = currentScrollY;
+        function updatePlayhead() {
+            const scrollTop = window.scrollY;
+            const vh = window.innerHeight;
+            const totalH = document.documentElement.scrollHeight;
+            const progress = (scrollTop + vh / 2) / totalH;
 
-            if (!hasScrolled) {
-                hasScrolled = true;
-                tutorial.style.display = 'none'; // Hilangkan tutorial setelah scroll pertama
+            let time = progress * duration;
+            if (time > duration) time = duration;
+            if (time < 0) time = 0;
+
+            audio.currentTime = time;
+
+            const direction = scrollTop > lastScrollY ? 1 : -1;
+            lastScrollY = scrollTop;
+
+            if (!hasInteracted) {
+                hasInteracted = true;
+                tutorial.style.display = 'none';
             }
 
-            // Hitung posisi waktu berdasarkan scroll (tengah layar adalah playhead)
-            const viewportHeight = window.innerHeight;
-            const scrollPercentage = (currentScrollY + viewportHeight / 2) / document.documentElement.scrollHeight;
-            const currentTime = scrollPercentage * duration;
-            audio.currentTime = currentTime;
+            if (direction === 1) {
+                // Hanya play saat bergerak maju (ke bawah / swipe up)
+                const playPromise = audio.play();
+                if (playPromise) playPromise.catch(() => {});
+                body.classList.add('glow-pink');
 
-            // Play hanya jika scroll down (maju), otherwise adjust posisi saja
-            if (scrollDirection === 1) {
-                audio.play();
-                body.classList.add('glow-pink'); // Glow pink saat scroll down (swipe up)
+                clearTimeout(timeoutGlow);
+                timeoutGlow = setTimeout(() => {
+                    body.classList.remove('glow-pink');
+                }, 400);
             } else {
                 audio.pause();
-                body.classList.remove('glow-pink'); // Hilangkan glow jika scroll up atau stop
-            }
-
-            // Reset glow jika stop scrolling
-            clearTimeout(isScrolling);
-            isScrolling = setTimeout(() => {
                 body.classList.remove('glow-pink');
-            }, 150); // Hilangkan setelah 150ms tanpa scroll
+            }
+        }
+
+        window.addEventListener('scroll', updatePlayhead);
+        window.addEventListener('touchmove', updatePlayhead); // Lebih responsif di mobile
+
+        // Inisialisasi
+        initAudio();
+
+        // Pause saat tab tidak aktif
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) audio.pause();
         });
-
-        // Load audio saat page load
-        loadAudio();
-
-        // Pause audio jika window tidak fokus (opsional, untuk pengalaman lebih baik)
-        window.addEventListener('blur', () => audio.pause());
     </script>
 </body>
 </html>
