@@ -8,21 +8,21 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #FFB6C1; /* Pink muda */
+            background-color: #FFB6C1;
             font-family: monospace;
             overflow-y: scroll;
             height: 100vh;
-            transition: background-color 0.4s ease;
+            transition: background-color 0.5s ease;
         }
 
         #visualization {
             white-space: pre;
-            font-size: 16px;
+            font-size: 14px; /* Sedikit lebih kecil agar muat lebih banyak bar */
             text-align: center;
-            line-height: 1.1;
+            line-height: 1.05;
             position: relative;
             z-index: 1;
-            padding: 40vh 0; /* Memberi ruang atas & bawah agar playhead bisa "lewati" waveform */
+            padding: 45vh 0 45vh 0; /* Ruang atas-bawah agar playhead bisa lewati seluruh waveform */
         }
 
         #playhead {
@@ -30,7 +30,7 @@
             top: 50%;
             left: 0;
             width: 100%;
-            height: 3px;
+            height: 4px;
             background: white;
             transform: translateY(-50%);
             z-index: 5;
@@ -42,32 +42,32 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.92);
-            padding: 25px 40px;
+            background: rgba(255, 255, 255, 0.93);
+            padding: 28px 45px;
             border-radius: 16px;
             z-index: 10;
             text-align: center;
-            font-size: 19px;
-            color: #222;
-            max-width: 90%;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            font-size: 20px;
+            color: #111;
+            max-width: 92%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
 
         #tutorial.error {
-            background: rgba(255, 220, 220, 0.95);
-            color: #c00;
-            border: 2px solid #c00;
+            background: rgba(255, 210, 210, 0.97);
+            color: #b00;
+            border: 2px solid #b00;
         }
 
         .glow-pink {
             background-color: #FF69B4 !important;
-            box-shadow: 0 0 40px #FF69B4, inset 0 0 30px #FF1493;
+            box-shadow: 0 0 50px #FF69B4, inset 0 0 40px #FF1493;
         }
     </style>
 </head>
 <body>
     <div id="playhead"></div>
-    <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio akan mengikuti bagian waveform yang dilewati garis putih tengah.<br>(Tutorial hilang setelah pertama scroll)</div>
+    <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio mengikuti posisi garis putih tengah di waveform.<br>Tutorial hilang setelah pertama kali scroll</div>
     <div id="visualization"></div>
 
     <audio id="audio" preload="auto"></audio>
@@ -87,7 +87,7 @@
         async function initAudio() {
             try {
                 const resp = await fetch('sound.mp3');
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                if (!resp.ok) throw new Error(`Status: ${resp.status}`);
 
                 const ab = await resp.arrayBuffer();
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -97,56 +97,59 @@
                 audio.src = 'sound.mp3';
                 await audio.load();
 
-                // Analisis waveform
                 const data = buffer.getChannelData(0);
-                const targetSamples = 12000; // Semakin besar → waveform lebih halus & halaman lebih panjang
+                const targetSamples = 8000; // Jumlah bar ≈ 8000 → cukup panjang tapi tidak terlalu ekstrem
                 const step = Math.floor(data.length / targetSamples);
                 waveform = [];
 
                 for (let i = 0; i < targetSamples; i++) {
-                    let sum = 0;
+                    let sum = 0, count = 0;
                     for (let j = 0; j < step; j++) {
-                        sum += Math.abs(data[i * step + j] || 0);
+                        const val = data[i * step + j];
+                        if (!isNaN(val)) {
+                            sum += Math.abs(val);
+                            count++;
+                        }
                     }
-                    waveform.push(sum / step);
+                    waveform.push(count > 0 ? sum / count : 0);
                 }
 
                 renderWaveform();
             } catch (err) {
                 console.error(err);
-                tutorial.innerHTML = `GAGAL MEMUAT AUDIO<br><br>sound.mp3 tidak ditemukan, rusak, atau format tidak didukung.<br>Pastikan file ada di folder yang sama.<br><small>${err.message}</small>`;
+                tutorial.innerHTML = `GAGAL MEMUAT FILE AUDIO<br><br>sound.mp3 tidak ditemukan, rusak, atau format salah.<br>Pastikan file ada di folder yang sama.<br><small>${err.message}</small>`;
                 tutorial.classList.add('error');
             }
         }
 
         function renderWaveform() {
-            const maxHearts = 22;
+            const maxHearts = 60; // Maksimal 60 emoji per bar (sesuai permintaan)
             let html = '';
 
             waveform.forEach(amp => {
-                const count = 1 + Math.floor(amp * maxHearts * 1.8);
-                const pad = Math.max(0, Math.floor((maxHearts * 2 - count) / 2));
-                html += ' '.repeat(pad) + '❤️'.repeat(count) + '\n';
+                // Skala amplitude ke 0–60 hati
+                const count = Math.max(1, Math.min(maxHearts, Math.round(amp * maxHearts * 1.6)));
+                const padding = Math.max(0, Math.floor((maxHearts - count) / 2));
+                html += ' '.repeat(padding) + '❤️'.repeat(count) + '\n';
             });
 
             vis.innerHTML = html;
 
-            // Set tinggi halaman agar sesuai waveform + ruang play
-            const approxLineHeight = 18;
-            const totalHeight = waveform.length * approxLineHeight + window.innerHeight * 1.5;
+            // Tinggi halaman disesuaikan agar waveform terasa penuh
+            const lineHeightPx = 15; // ≈ font-size + line-height
+            const totalHeight = waveform.length * lineHeightPx + window.innerHeight * 1.8;
             document.documentElement.style.height = totalHeight + 'px';
         }
 
         function updatePlayhead() {
+            if (tutorial.classList.contains('error')) return;
+
             const scrollTop = window.scrollY;
             const vh = window.innerHeight;
-            const totalH = document.documentElement.scrollHeight;
-            const progress = (scrollTop + vh / 2) / totalH;
+            const totalH = document.documentElement.scrollHeight || document.body.scrollHeight;
+            const progress = Math.max(0, Math.min(1, (scrollTop + vh / 2) / totalH));
 
-            let time = progress * duration;
-            if (time > duration) time = duration;
-            if (time < 0) time = 0;
-
+            const time = progress * duration;
             audio.currentTime = time;
 
             const direction = scrollTop > lastScrollY ? 1 : -1;
@@ -157,29 +160,25 @@
                 tutorial.style.display = 'none';
             }
 
-            if (direction === 1) {
-                // Hanya play saat bergerak maju (ke bawah / swipe up)
+            if (direction === 1 && !audio.paused) {
+                // Play hanya saat bergerak maju (ke bawah/swipe up)
                 const playPromise = audio.play();
                 if (playPromise) playPromise.catch(() => {});
                 body.classList.add('glow-pink');
 
                 clearTimeout(timeoutGlow);
-                timeoutGlow = setTimeout(() => {
-                    body.classList.remove('glow-pink');
-                }, 400);
-            } else {
+                timeoutGlow = setTimeout(() => body.classList.remove('glow-pink'), 600);
+            } else if (direction === -1) {
                 audio.pause();
                 body.classList.remove('glow-pink');
             }
         }
 
         window.addEventListener('scroll', updatePlayhead);
-        window.addEventListener('touchmove', updatePlayhead); // Lebih responsif di mobile
+        window.addEventListener('touchmove', updatePlayhead, { passive: true });
 
-        // Inisialisasi
         initAudio();
 
-        // Pause saat tab tidak aktif
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) audio.pause();
         });
