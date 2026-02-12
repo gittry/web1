@@ -189,6 +189,7 @@
 
         let wavesurfer;
         let audioSrc = 'sound1.mp3'; // <-- GANTI dengan file audio default kamu
+        let wakeLock = null;
 
         async function init(src) {
             try {
@@ -249,14 +250,48 @@
             }
         }
 
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock telah dilepas');
+                    });
+                    console.log('Wake Lock aktif: Layar akan tetap menyala');
+                } catch (err) {
+                    console.error(`Gagal mengaktifkan Wake Lock: ${err.name}, ${err.message}`);
+                }
+            } else {
+                console.warn('Wake Lock API tidak didukung di browser ini');
+            }
+        }
+
+        async function releaseWakeLock() {
+            if (wakeLock !== null) {
+                try {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    console.log('Wake Lock dilepas');
+                } catch (err) {
+                    console.error(`Gagal melepaskan Wake Lock: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
         playPauseBtn.addEventListener('click', () => {
-            if (wavesurfer.isPlaying()) wavesurfer.pause();
-            else wavesurfer.play().catch(()=>{});
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+                releaseWakeLock(); // Lepas wake lock saat pause
+            } else {
+                wavesurfer.play().catch(()=>{});
+                requestWakeLock(); // Aktifkan wake lock saat play
+            }
         });
 
         startBtn.addEventListener('click', () => {
             tutorial.style.display = 'none';
             wavesurfer.play().catch(()=>{});
+            requestWakeLock(); // Aktifkan wake lock saat tombol mulai ditekan
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -269,7 +304,12 @@
         });
 
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && wavesurfer) wavesurfer.pause();
+            if (document.hidden && wavesurfer) {
+                wavesurfer.pause();
+                releaseWakeLock(); // Lepas wake lock saat tab/minimize
+            } else if (!document.hidden && wavesurfer && wavesurfer.isPlaying()) {
+                requestWakeLock(); // Re-aktifkan jika kembali dan masih playing
+            }
         });
 
         init(audioSrc);
