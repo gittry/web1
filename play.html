@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Love Waveform Audio Player</title>
+    <title>Love Waveform Audio Player - Enhanced</title>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.umd.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: #FFB6C1;
-            font-family: monospace;
+            background: linear-gradient(#FFB6C1, #FF69B4);
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
             height: 100vh;
             transition: background 0.5s ease;
-            overflow-x: hidden;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         #loading {
             position: fixed;
             inset: 0;
-            background: #FFB6C1;
+            background: rgba(255, 182, 193, 0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
-            color: white;
             font-size: 24px;
-            text-shadow: 0 0 10px #FF69B4;
+            text-shadow: 0 0 10px #FF1493;
         }
 
         .heart-loader { font-size: 80px; animation: pulse 1.4s infinite; margin-bottom: 25px; }
@@ -40,30 +44,42 @@
         .small-heart:nth-child(3) { animation-delay: 1s; }
         @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-40px) rotate(20deg); } }
 
-        #visualization {
-            white-space: pre;
-            font-size: 14px;
-            line-height: 1.05;
-            padding: 50vh 0 50vh 0;
+        #waveform {
+            width: 90%;
+            height: 200px;
+            margin: 20px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: none;
-            max-width: 100vw;
-            overflow-x: hidden;
-            margin: 0 auto;
-            display: inline-block;
-            text-align: left;
-            box-sizing: border-box;
         }
 
-        #playhead {
-            position: fixed;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: white;
-            transform: translateY(-50%);
-            z-index: 5;
-            pointer-events: none;
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        #play-pause, #upload-btn {
+            background: #FF1493;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(255,20,147,0.5);
+        }
+
+        #play-pause:hover, #upload-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(255,20,147,0.7);
+        }
+
+        #file-input {
             display: none;
         }
 
@@ -72,16 +88,32 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.94);
-            padding: 30px 50px;
-            border-radius: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 40px;
+            border-radius: 30px;
             z-index: 10;
             text-align: center;
             font-size: 20px;
-            color: #111;
-            max-width: 90%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: #333;
+            max-width: 80%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
             display: none;
+        }
+
+        #tutorial button {
+            margin-top: 20px;
+            background: #FF69B4;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #tutorial button:hover {
+            background: #FF1493;
         }
 
         #tutorial.error {
@@ -91,8 +123,24 @@
         }
 
         .glow-pink {
-            background: #FF69B4 !important;
-            box-shadow: 0 0 60px #FF69B4, inset 0 0 50px #FF1493;
+            background: linear-gradient(#FF69B4, #FF1493) !important;
+            box-shadow: 0 0 60px #FF69B4;
+        }
+
+        #progress {
+            width: 90%;
+            height: 5px;
+            background: #fff;
+            margin: 10px 0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background: #FF1493;
+            transition: width 0.1s;
         }
     </style>
 </head>
@@ -107,129 +155,131 @@
         <p style="margin-top:50px;">Memuat audio...</p>
     </div>
 
-    <div id="playhead"></div>
-    <div id="tutorial">Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio mengikuti garis putih tengah di waveform.<br>Tutorial hilang setelah pertama scroll</div>
-    <div id="visualization"></div>
+    <div id="tutorial">
+        <p>Swipe up / gulir ke bawah untuk memutar lagu.<br>Audio mengikuti posisi waveform.<br>Atau tekan tombol di bawah untuk mulai.</p>
+        <button id="start-btn">Mulai Putar ❤️</button>
+    </div>
+
+    <div id="waveform"></div>
+    <div id="progress">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="controls">
+        <button id="play-pause">Putar ❤️</button>
+        <label for="file-input">
+            <button id="upload-btn">Upload Audio 💖</button>
+        </label>
+        <input type="file" id="file-input" accept="audio/*">
+    </div>
 
     <audio id="audio" preload="auto"></audio>
 
     <script>
         const audio = document.getElementById('audio');
-        const vis = document.getElementById('visualization');
-        const tutorial = document.getElementById('tutorial');
         const loading = document.getElementById('loading');
-        const playhead = document.getElementById('playhead');
+        const tutorial = document.getElementById('tutorial');
+        const waveformContainer = document.getElementById('waveform');
+        const playPauseBtn = document.getElementById('play-pause');
+        const startBtn = document.getElementById('start-btn');
+        const fileInput = document.getElementById('file-input');
+        const progressBar = document.getElementById('progress-bar');
         const body = document.body;
 
-        let waveform = [];
-        let duration = 0;
-        let lastScrollY = 0;
-        let glowTimeout = null;
+        let wavesurfer;
         let hasInteracted = false;
+        let audioSrc = 'sound.mp3'; // Default
 
-        async function init() {
+        async function init(src) {
             try {
-                const res = await fetch('sound.mp3');
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                const ab = await res.arrayBuffer();
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const buffer = await ctx.decodeAudioData(ab);
-
-                duration = buffer.duration;
-                audio.src = 'sound.mp3';
+                loading.style.display = 'flex';
+                audio.src = src;
                 await audio.load();
 
-                const data = buffer.getChannelData(0);
-                const samples = 8000;
-                const step = Math.floor(data.length / samples);
-                waveform = [];
+                wavesurfer = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: '#FF69B4',
+                    progressColor: '#FFB6C1',
+                    cursorColor: '#fff',
+                    barWidth: 3,
+                    barRadius: 3,
+                    height: 200,
+                    responsive: true,
+                    normalize: true
+                });
 
-                for (let i = 0; i < samples; i++) {
-                    let sum = 0, cnt = 0;
-                    for (let j = 0; j < step; j++) {
-                        const v = data[i * step + j];
-                        if (!isNaN(v)) { sum += Math.abs(v); cnt++; }
-                    }
-                    waveform.push(cnt ? sum / cnt : 0);
-                }
-
-                render();
+                await wavesurfer.load(src);
 
                 loading.style.display = 'none';
-                vis.style.display = 'block';
-                playhead.style.display = 'block';
+                waveformContainer.style.display = 'block';
                 tutorial.style.display = 'block';
-                body.style.overflowY = 'scroll';
+                body.style.overflowY = 'auto';
+
+                wavesurfer.on('play', () => {
+                    playPauseBtn.textContent = 'Pause 💔';
+                    body.classList.add('glow-pink');
+                });
+                wavesurfer.on('pause', () => {
+                    playPauseBtn.textContent = 'Putar ❤️';
+                    body.classList.remove('glow-pink');
+                });
+                wavesurfer.on('audioprocess', updateProgress);
+                wavesurfer.on('finish', () => wavesurfer.stop());
 
             } catch (e) {
                 console.error(e);
-                loading.innerHTML = `
-                    <div class="heart-loader" style="color:#c00; animation:none;">❌</div>
-                    <p style="color:#c00; font-size:22px; margin-top:40px; text-align:center;">
-                        GAGAL MEMUAT AUDIO<br><br>
-                        sound.mp3 tidak ditemukan, rusak, atau format tidak didukung.<br>
-                        Pastikan file ada di folder yang sama.<br>
-                        <small>${e.message}</small>
-                    </p>
-                `;
+                tutorial.classList.add('error');
+                tutorial.innerHTML = '<p>GAGAL MEMUAT AUDIO<br>Pastikan file valid.<br><small>' + e.message + '</small></p>';
+                tutorial.style.display = 'block';
             }
         }
 
-        function render() {
-            const max = 60;
-            let html = '';
-            waveform.forEach(amp => {
-                const count = Math.max(1, Math.min(max, Math.round(amp * max * 1.5)));
-                const totalSpaces = max - count;
-                const leftPad = Math.floor(totalSpaces / 2);
-                const rightPad = totalSpaces - leftPad;
-                
-                html += ' '.repeat(leftPad) + '❤️'.repeat(count) + ' '.repeat(rightPad) + '\n';
-            });
-            vis.innerHTML = html;
-
-            const lh = 15;
-            document.documentElement.style.height = (waveform.length * lh + innerHeight * 2) + 'px';
+        function updateProgress() {
+            const progress = wavesurfer.getCurrentTime() / wavesurfer.getDuration() * 100;
+            progressBar.style.width = progress + '%';
         }
 
         function onScroll() {
-            if (tutorial.classList.contains('error')) return;
-
-            const st = scrollY;
-            const vh = innerHeight;
+            if (!wavesurfer) return;
+            const st = window.scrollY;
+            const vh = window.innerHeight;
             const th = document.documentElement.scrollHeight;
             const prog = Math.max(0, Math.min(1, (st + vh / 2) / th));
-
-            audio.currentTime = prog * duration;
-
-            const dir = st > lastScrollY ? 1 : -1;
-            lastScrollY = st;
-
-            if (!hasInteracted) {
-                hasInteracted = true;
-                tutorial.style.display = 'none';
-            }
-
-            if (dir === 1) {
-                audio.play().catch(() => {});
-                body.classList.add('glow-pink');
-                clearTimeout(glowTimeout);
-                glowTimeout = setTimeout(() => body.classList.remove('glow-pink'), 700);
-            } else {
-                audio.pause();
-                body.classList.remove('glow-pink');
-            }
+            wavesurfer.seekTo(prog);
+            if (prog > 0 && !wavesurfer.isPlaying()) wavesurfer.play();
         }
+
+        playPauseBtn.addEventListener('click', () => {
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+            } else {
+                wavesurfer.play();
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            hasInteracted = true;
+            tutorial.style.display = 'none';
+            wavesurfer.play();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                audioSrc = URL.createObjectURL(file);
+                if (wavesurfer) wavesurfer.destroy();
+                init(audioSrc);
+            }
+        });
 
         addEventListener('scroll', onScroll);
         addEventListener('touchmove', onScroll, { passive: true });
 
-        init();
-
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) audio.pause();
+            if (document.hidden && wavesurfer) wavesurfer.pause();
         });
+
+        init(audioSrc);
     </script>
 </body>
 </html>
