@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Love Waveform Audio Player - No Loading</title>
+    <title>Love Waveform Audio Player - No Scroll</title>
     <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <style>
         body {
@@ -20,6 +20,29 @@
             align-items: center;
             justify-content: center;
         }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 182, 193, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            font-size: 22px;
+            text-shadow: 0 0 10px #FF1493;
+        }
+
+        .heart-loader { font-size: 90px; animation: pulse 1.4s infinite; margin-bottom: 20px; }
+        @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.4); opacity: 1; } }
+
+        .hearts-float { display: flex; gap: 25px; margin-bottom: 30px; }
+        .small-heart { font-size: 40px; animation: float 3.5s infinite ease-in-out; }
+        .small-heart:nth-child(1) { animation-delay: 0s; }
+        .small-heart:nth-child(2) { animation-delay: 0.6s; }
+        .small-heart:nth-child(3) { animation-delay: 1.2s; }
+        @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-50px) rotate(25deg); } }
 
         #waveform {
             width: 92%;
@@ -94,29 +117,53 @@
             box-shadow: 0 0 80px #FF69B4;
         }
 
-        #status {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.4);
-            padding: 12px 28px;
-            border-radius: 30px;
+        #progress-container {
+            width: 92%;
+            height: 8px;
+            background: rgba(255,255,255,0.4);
+            margin: 15px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, #FFB6C1, #FF1493);
+            transition: width 0.2s;
+        }
+
+        #loading-progress {
+            margin-top: 20px;
             font-size: 18px;
-            z-index: 5;
-            display: none;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div id="status">Memuat audio...</div>
+    <div id="loading">
+        <div class="heart-loader">💖</div>
+        <div class="hearts-float">
+            <span class="small-heart">❤️</span>
+            <span class="small-heart">💗</span>
+            <span class="small-heart">💞</span>
+        </div>
+        <p>Memuat & memproses audio...</p>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="loading-progress">0%</div>
+    </div>
 
     <div id="tutorial">
-        <p>Tekan tombol mulai untuk memutar lagu.<br>Waveform akan muncul setelah audio siap.</p>
+        <p>Tekan tombol mulai di bawah untuk memutar lagu.<br>Waveform akan muncul setelah audio siap.</p>
         <button id="start-btn">Mulai Pengalaman Cinta ❤️</button>
     </div>
 
     <div id="waveform"></div>
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
 
     <div id="controls">
         <button id="play-pause">Putar 💖</button>
@@ -130,12 +177,14 @@
 
     <script>
         const audio = document.getElementById('audio');
-        const status = document.getElementById('status');
+        const loading = document.getElementById('loading');
         const tutorial = document.getElementById('tutorial');
         const waveformContainer = document.getElementById('waveform');
         const playPauseBtn = document.getElementById('play-pause');
         const startBtn = document.getElementById('start-btn');
         const fileInput = document.getElementById('file-input');
+        const progressBar = document.getElementById('progress-bar');
+        const loadingProgress = document.getElementById('loading-progress');
         const body = document.body;
 
         let wavesurfer;
@@ -143,7 +192,7 @@
 
         async function init(src) {
             try {
-                status.style.display = 'block';
+                loading.style.display = 'flex';
                 audio.src = src;
                 await audio.load();
 
@@ -160,11 +209,18 @@
                     backend: 'MediaElement'
                 });
 
+                wavesurfer.on('loading', (percent) => {
+                    const p = Math.round(percent);
+                    progressBar.style.width = p + '%';
+                    loadingProgress.textContent = p + '%';
+                });
+
                 await wavesurfer.load(src);
 
-                status.style.display = 'none';
+                loading.style.display = 'none';
                 waveformContainer.style.display = 'block';
                 tutorial.style.display = 'block';
+                // Tidak mengubah overflowY menjadi 'auto' → tetap hidden (no scroll)
 
                 wavesurfer.on('play', () => {
                     playPauseBtn.textContent = 'Pause 💔';
@@ -174,25 +230,33 @@
                     playPauseBtn.textContent = 'Putar 💖';
                     body.classList.remove('glow-pink');
                 });
+                wavesurfer.on('audioprocess', () => {
+                    const prog = wavesurfer.getCurrentTime() / wavesurfer.getDuration() * 100;
+                    progressBar.style.width = prog + '%';
+                });
                 wavesurfer.on('finish', () => wavesurfer.stop());
 
             } catch (e) {
                 console.error(e);
-                status.innerHTML = `Gagal memuat audio: ${e.message}`;
-                status.style.background = 'rgba(200,0,0,0.7)';
-                status.style.display = 'block';
+                loading.innerHTML = `
+                    <div class="heart-loader" style="color:#c00; animation:none;">❌</div>
+                    <p style="color:#c00; font-size:24px; margin-top:30px; text-align:center;">
+                        GAGAL MEMUAT AUDIO<br><br>
+                        Cek file "${src}" ada & valid.<br>
+                        <small>${e.message}</small>
+                    </p>
+                `;
             }
         }
 
         playPauseBtn.addEventListener('click', () => {
-            if (!wavesurfer) return;
             if (wavesurfer.isPlaying()) wavesurfer.pause();
             else wavesurfer.play().catch(()=>{});
         });
 
         startBtn.addEventListener('click', () => {
             tutorial.style.display = 'none';
-            if (wavesurfer) wavesurfer.play().catch(()=>{});
+            wavesurfer.play().catch(()=>{});
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -208,7 +272,6 @@
             if (document.hidden && wavesurfer) wavesurfer.pause();
         });
 
-        // Mulai langsung tanpa loading overlay besar
         init(audioSrc);
     </script>
 </body>
