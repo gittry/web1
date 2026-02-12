@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Love Waveform Audio Player - Vanilla JS</title>
+    <title>Love Waveform Audio Player - Enhanced</title>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.umd.js"></script>
     <style>
         body {
             margin: 0;
@@ -43,7 +44,7 @@
         .small-heart:nth-child(3) { animation-delay: 1.2s; }
         @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-50px) rotate(25deg); } }
 
-        #canvas {
+        #waveform {
             width: 92%;
             height: 220px;
             margin: 25px 0;
@@ -51,7 +52,6 @@
             overflow: hidden;
             box-shadow: 0 12px 35px rgba(0,0,0,0.25);
             display: none;
-            touch-action: none; /* Untuk smooth scroll */
         }
 
         #controls {
@@ -144,19 +144,6 @@
             font-size: 18px;
             font-weight: bold;
         }
-
-        #playhead {
-            position: fixed;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: rgba(255,255,255,0.8);
-            transform: translateY(-50%);
-            z-index: 5;
-            pointer-events: none;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -175,12 +162,11 @@
     </div>
 
     <div id="tutorial">
-        <p>Gulir ke bawah untuk memutar lagu secara interaktif.<br>Waveform digambar halus dengan canvas.<br>Tekan tombol mulai untuk pengalaman cepat.</p>
+        <p>Gulir ke bawah untuk memutar lagu secara interaktif.<br>Atau tekan tombol mulai di bawah.<br>Waveform akan muncul bertahap agar lebih cepat.</p>
         <button id="start-btn">Mulai Pengalaman Cinta ❤️</button>
     </div>
 
-    <canvas id="canvas"></canvas>
-    <div id="playhead"></div>
+    <div id="waveform"></div>
     <div id="progress-container">
         <div id="progress-bar"></div>
     </div>
@@ -199,102 +185,63 @@
         const audio = document.getElementById('audio');
         const loading = document.getElementById('loading');
         const tutorial = document.getElementById('tutorial');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const waveformContainer = document.getElementById('waveform');
         const playPauseBtn = document.getElementById('play-pause');
         const startBtn = document.getElementById('start-btn');
         const fileInput = document.getElementById('file-input');
         const progressBar = document.getElementById('progress-bar');
         const loadingProgress = document.getElementById('loading-progress');
-        const playhead = document.getElementById('playhead');
         const body = document.body;
 
-        let waveformData = [];
-        let duration = 0;
+        let wavesurfer;
         let hasInteracted = false;
-        let audioSrc = 'sound1.mp3'; // Default file audio
-        let lastScrollY = 0;
-        let glowTimeout = null;
+        let audioSrc = 'sound1.mp3'; // <-- UBAH DI SINI jadi nama file audio kamu, misal 'mysong.mp3'
 
         async function init(src) {
             try {
                 loading.style.display = 'flex';
-                progressBar.style.width = '0%';
-                loadingProgress.textContent = '0%';
-
-                // Fetch dengan progress
-                const response = await fetch(src);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const reader = response.body.getReader();
-                const contentLength = +response.headers.get('Content-Length');
-                let receivedLength = 0;
-                let chunks = [];
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                    receivedLength += value.length;
-                    if (contentLength) {
-                        const percent = Math.round((receivedLength / contentLength) * 50); // 50% untuk download
-                        progressBar.style.width = percent + '%';
-                        loadingProgress.textContent = percent + '%';
-                    }
-                }
-
-                const arrayBuffer = await new Blob(chunks).arrayBuffer();
-
-                // Decode audio
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const buffer = await audioCtx.decodeAudioData(arrayBuffer);
-                duration = buffer.duration;
-
-                // Update progress ke 75% selama processing waveform
-                progressBar.style.width = '75%';
-                loadingProgress.textContent = '75% (Memproses waveform...)';
-
-                // Downsample waveform (rata-rata amplitude)
-                const data = buffer.getChannelData(0); // Mono
-                const samples = Math.min(2000, data.length); // Lebih sedikit sampel untuk smooth canvas
-                const step = Math.floor(data.length / samples);
-                waveformData = [];
-
-                for (let i = 0; i < samples; i++) {
-                    let sum = 0, cnt = 0;
-                    for (let j = 0; j < step; j++) {
-                        const idx = i * step + j;
-                        if (idx < data.length) {
-                            const v = data[idx];
-                            if (!isNaN(v)) { sum += Math.abs(v); cnt++; }
-                        }
-                    }
-                    waveformData.push(cnt ? sum / cnt : 0);
-                }
-
-                // Normalisasi
-                const maxAmp = Math.max(...waveformData);
-                if (maxAmp > 0) waveformData = waveformData.map(v => v / maxAmp);
-
                 audio.src = src;
                 await audio.load();
 
-                // Render canvas
-                renderWaveform();
+                wavesurfer = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: '#FF69B4',
+                    progressColor: '#FFB6C1',
+                    cursorColor: '#fff',
+                    barWidth: 4,
+                    barRadius: 4,
+                    height: 220,
+                    responsive: true,
+                    normalize: true,
+                    backend: 'MediaElement' // <-- Kunci percepatan: play cepat, waveform bertahap
+                });
 
-                // Selesai loading
-                progressBar.style.width = '100%';
-                loadingProgress.textContent = '100%';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                    canvas.style.display = 'block';
-                    playhead.style.display = 'block';
-                    tutorial.style.display = 'block';
-                    body.style.overflowY = 'scroll';
-                    // Sesuaikan height body untuk scroll full waveform
-                    const canvasHeight = waveformData.length * 2 + window.innerHeight * 2; // Estimasi height
-                    document.documentElement.style.height = canvasHeight + 'px';
-                }, 500);
+                wavesurfer.on('loading', (percent) => {
+                    const p = Math.round(percent);
+                    progressBar.style.width = p + '%';
+                    loadingProgress.textContent = p + '%';
+                });
+
+                await wavesurfer.load(src);
+
+                loading.style.display = 'none';
+                waveformContainer.style.display = 'block';
+                tutorial.style.display = 'block';
+                body.style.overflowY = 'auto';
+
+                wavesurfer.on('play', () => {
+                    playPauseBtn.textContent = 'Pause 💔';
+                    body.classList.add('glow-pink');
+                });
+                wavesurfer.on('pause', () => {
+                    playPauseBtn.textContent = 'Putar 💖';
+                    body.classList.remove('glow-pink');
+                });
+                wavesurfer.on('audioprocess', () => {
+                    const prog = wavesurfer.getCurrentTime() / wavesurfer.getDuration() * 100;
+                    progressBar.style.width = prog + '%';
+                });
+                wavesurfer.on('finish', () => wavesurfer.stop());
 
             } catch (e) {
                 console.error(e);
@@ -309,104 +256,41 @@
             }
         }
 
-        function renderWaveform() {
-            const w = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            const h = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-            ctx.clearRect(0, 0, w, h);
-
-            const barWidth = w / waveformData.length;
-            const centerY = h / 2;
-
-            ctx.fillStyle = '#FF69B4';
-            ctx.shadowColor = '#FF1493';
-            ctx.shadowBlur = 10;
-
-            waveformData.forEach((amp, i) => {
-                const barHeight = amp * (h * 0.8); // Scale max 80% height
-                const x = i * barWidth;
-                const y = centerY - barHeight / 2;
-                ctx.fillRect(x, y, barWidth * 0.8, barHeight); // Bar dengan gap kecil
-            });
-        }
-
-        function updateProgress() {
-            const prog = audio.currentTime / duration * 100;
-            progressBar.style.width = prog + '%';
-        }
-
         function onScroll() {
+            if (!wavesurfer) return;
             const st = window.scrollY;
             const vh = window.innerHeight;
             const th = document.documentElement.scrollHeight;
             const prog = Math.max(0, Math.min(1, (st + vh / 2) / th));
-
-            audio.currentTime = prog * duration;
-            updateProgress();
-
-            const dir = st > lastScrollY ? 1 : -1;
-            lastScrollY = st;
-
-            if (!hasInteracted) {
-                hasInteracted = true;
-                tutorial.style.display = 'none';
-            }
-
-            if (dir === 1) {
-                audio.play().catch(() => {});
-                body.classList.add('glow-pink');
-                clearTimeout(glowTimeout);
-                glowTimeout = setTimeout(() => body.classList.remove('glow-pink'), 700);
-            } else {
-                audio.pause();
-                body.classList.remove('glow-pink');
-            }
+            wavesurfer.seekTo(prog);
+            if (prog > 0 && !wavesurfer.isPlaying()) wavesurfer.play().catch(()=>{});
         }
 
         playPauseBtn.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.play().catch(() => {});
-                playPauseBtn.textContent = 'Pause 💔';
-                body.classList.add('glow-pink');
-            } else {
-                audio.pause();
-                playPauseBtn.textContent = 'Putar 💖';
-                body.classList.remove('glow-pink');
-            }
+            if (wavesurfer.isPlaying()) wavesurfer.pause();
+            else wavesurfer.play().catch(()=>{});
         });
 
         startBtn.addEventListener('click', () => {
             hasInteracted = true;
             tutorial.style.display = 'none';
-            audio.play().catch(() => {});
+            wavesurfer.play().catch(()=>{});
         });
 
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 audioSrc = URL.createObjectURL(file);
-                waveformData = []; // Reset
+                if (wavesurfer) wavesurfer.destroy();
                 init(audioSrc);
             }
-        });
-
-        audio.addEventListener('timeupdate', updateProgress);
-        audio.addEventListener('ended', () => {
-            audio.currentTime = 0;
-            updateProgress();
-            body.classList.remove('glow-pink');
-            playPauseBtn.textContent = 'Putar 💖';
         });
 
         addEventListener('scroll', onScroll);
         addEventListener('touchmove', onScroll, { passive: true });
 
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) audio.pause();
-        });
-
-        // Resize canvas on window resize
-        addEventListener('resize', () => {
-            if (waveformData.length) renderWaveform();
+            if (document.hidden && wavesurfer) wavesurfer.pause();
         });
 
         init(audioSrc);
