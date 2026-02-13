@@ -19,6 +19,24 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative; /* Untuk posisi snowflakes */
+        }
+
+        /* Animasi salju yang berjatuhan */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            user-select: none;
+            animation: fall linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
         }
 
         #loading {
@@ -62,7 +80,7 @@
             margin-top: 25px;
         }
 
-        #play-pause, #upload-btn {
+        #play-pause, #show-letter-btn {
             background: #FF1493;
             border: none;
             color: white;
@@ -74,12 +92,10 @@
             box-shadow: 0 6px 18px rgba(255,20,147,0.6);
         }
 
-        #play-pause:hover, #upload-btn:hover {
+        #play-pause:hover, #show-letter-btn:hover {
             transform: scale(1.08);
             box-shadow: 0 12px 25px rgba(255,20,147,0.8);
         }
-
-        #file-input { display: none; }
 
         #tutorial {
             position: fixed;
@@ -138,9 +154,71 @@
             font-size: 18px;
             font-weight: bold;
         }
+
+        /* Popup untuk gambar surat */
+        #image-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        #popup-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        #close-popup {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #FF1493;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #close-popup:hover {
+            background: #c00;
+        }
     </style>
 </head>
 <body>
+    <!-- Elemen untuk salju yang berjatuhan -->
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <div class="snowflake">❄️</div>
+    <!-- Tambahkan lebih banyak jika diperlukan untuk efek lebih padat -->
+
     <div id="loading">
         <div class="heart-loader">💖</div>
         <div class="hearts-float">
@@ -167,10 +245,13 @@
 
     <div id="controls">
         <button id="play-pause">Putar 💖</button>
-        <label for="file-input">
-            <button id="upload-btn">Pilih Lagu Lain 💕</button>
-        </label>
-        <input type="file" id="file-input" accept="audio/*">
+        <button id="show-letter-btn">Tampilkan surat 💕</button>
+    </div>
+
+    <!-- Popup untuk gambar surat -->
+    <div id="image-popup">
+        <img id="popup-image" src="surat.png" alt="Surat">
+        <button id="close-popup">X</button>
     </div>
 
     <audio id="audio" preload="auto"></audio>
@@ -182,7 +263,9 @@
         const waveformContainer = document.getElementById('waveform');
         const playPauseBtn = document.getElementById('play-pause');
         const startBtn = document.getElementById('start-btn');
-        const fileInput = document.getElementById('file-input');
+        const showLetterBtn = document.getElementById('show-letter-btn');
+        const imagePopup = document.getElementById('image-popup');
+        const closePopup = document.getElementById('close-popup');
         const progressBar = document.getElementById('progress-bar');
         const loadingProgress = document.getElementById('loading-progress');
         const body = document.body;
@@ -190,6 +273,21 @@
         let wavesurfer;
         let audioSrc = 'sound1.mp3'; // <-- GANTI dengan file audio default kamu
         let wakeLock = null;
+
+        // Inisialisasi animasi salju
+        const snowflakes = document.querySelectorAll('.snowflake');
+        snowflakes.forEach((flake) => {
+            const duration = Math.random() * 10 + 5; // 5-15 detik
+            const delay = Math.random() * 5;
+            const left = Math.random() * 100;
+            const size = Math.random() * 1 + 0.5; // 0.5-1.5 em
+
+            flake.style.left = `${left}%`;
+            flake.style.animationDuration = `${duration}s`;
+            flake.style.animationDelay = `${delay}s`;
+            flake.style.fontSize = `${size}em`;
+            flake.style.opacity = Math.random() * 0.5 + 0.5;
+        });
 
         async function init(src) {
             try {
@@ -294,13 +392,14 @@
             requestWakeLock(); // Aktifkan wake lock saat tombol mulai ditekan
         });
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                audioSrc = URL.createObjectURL(file);
-                if (wavesurfer) wavesurfer.destroy();
-                init(audioSrc);
-            }
+        // Event untuk tombol tampilkan surat
+        showLetterBtn.addEventListener('click', () => {
+            imagePopup.style.display = 'flex';
+        });
+
+        // Event untuk tombol close popup
+        closePopup.addEventListener('click', () => {
+            imagePopup.style.display = 'none';
         });
 
         document.addEventListener('visibilitychange', () => {
