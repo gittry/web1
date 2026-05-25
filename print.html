@@ -43,13 +43,12 @@
         button:hover { background: #0056b3; }
         button:disabled { background: #6c757d; cursor: not-allowed; }
 
-        /* Loading Animation */
         #loadingOverlay {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 9999;
             align-items: center;
             justify-content: center;
@@ -65,14 +64,11 @@
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <h1>Gabung 3 Foto → Simpan & Cetak via RawBT</h1>
+    <h1>Gabung 3 Foto → Kompres & Cetak via RawBT</h1>
 
     <div class="preview-container">
         <div>
@@ -92,15 +88,15 @@
         </div>
     </div>
 
-    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Simpan & Cetak3</button>
+    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Kompres & Cetak4</button>
 
     <img id="mergedPreview" src="" alt="Hasil Gabungan">
 
-    <!-- Loading Overlay -->
+    <!-- Loading -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <h3 id="loadingText">Menggabungkan foto...</h3>
-        <p id="loadingSubtext">Mohon tunggu</p>
+        <p id="loadingSubtext"></p>
     </div>
 
     <script>
@@ -123,6 +119,39 @@
         setupPreview(1);
         setupPreview(2);
         setupPreview(3);
+
+        function getBase64Size(base64) {
+            const len = base64.length;
+            const sizeBytes = (len * 3) / 4 - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+            return sizeBytes / 1024;
+        }
+
+        function compressImage(base64, maxKB = 200) {
+            return new Promise((resolve) => {
+                let quality = 0.92;
+                let compressed = base64;
+
+                const tryCompress = () => {
+                    const size = getBase64Size(compressed);
+                    if (size <= maxKB || quality <= 0.1) {
+                        resolve(compressed);
+                        return;
+                    }
+                    quality -= 0.08;
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        compressed = canvas.toDataURL('image/jpeg', quality);
+                        tryCompress();
+                    };
+                    img.src = base64;
+                };
+                tryCompress();
+            });
+        }
 
         async function mergeAndPrint() {
             const btn = document.getElementById('actionBtn');
@@ -157,30 +186,38 @@
                 ctx.drawImage(img2, 0, height1, targetWidth, height2);
                 ctx.drawImage(img3, 0, height1 + height2, targetWidth, height3);
 
-                const mergedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+                let mergedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+
+                // Kompresi jika melebihi 200KB
+                showLoading("Mengompres gambar...<br>Target max 200KB");
+                const finalBase64 = await compressImage(mergedBase64, 200);
 
                 // Tampilkan preview
                 const preview = document.getElementById('mergedPreview');
-                preview.src = mergedBase64;
+                preview.src = finalBase64;
                 preview.style.display = 'block';
 
-                // === 1. Simpan Foto Gabungan ===
+                // === UNIX TIMESTAMP ===
+                const unixTimestamp = Math.floor(Date.now() / 1000);
+                const filename = `foto-gabungan-${unixTimestamp}.jpg`;
+
+                // 1. Simpan Foto
                 showLoading("Menyimpan foto gabungan...");
                 const downloadLink = document.createElement('a');
-                downloadLink.href = mergedBase64;
-                downloadLink.download = `foto-gabungan-${new Date().toISOString().slice(0,10)}.jpg`;
+                downloadLink.href = finalBase64;
+                downloadLink.download = filename;
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
 
-                // === Tunggu 2 detik ===
-                showLoading("Menyiapkan cetak ke printer...<br>Tunggu 2 detik");
+                // Tunggu 2 detik
+                showLoading("Menyiapkan cetak...<br>Tunggu 2 detik");
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // === 2. Cetak ke RawBT ===
+                // 2. Cetak ke RawBT
                 showLoading("Mengirim ke RawBT...");
-                
-                const base64Data = mergedBase64.split(',')[1];
+
+                const base64Data = finalBase64.split(',')[1];
                 const intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
 
                 const printLink = document.createElement('a');
@@ -190,7 +227,7 @@
                 printLink.click();
                 document.body.removeChild(printLink);
 
-                // Fallback intent
+                // Fallback
                 setTimeout(() => {
                     const fallback = document.createElement('a');
                     fallback.href = `intent:#Intent;action=android.intent.action.VIEW;data=${encodeURIComponent(intentUrl)};end`;
@@ -201,7 +238,7 @@
                 }, 300);
 
                 hideLoading();
-                alert("✅ Foto gabungan berhasil disimpan dan dikirim ke RawBT!");
+                alert(`✅ Berhasil!\nFoto gabungan (≤200KB) disimpan sebagai:\n${filename}`);
 
             } catch (e) {
                 hideLoading();
