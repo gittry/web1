@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamera B&W - RawBT USB</title>
+    <title>Kamera B&W - RawBT</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
@@ -290,32 +290,32 @@
             link.click();
         }
 
-        // === CETAK LANGSUNG VIA RAWBT (Tanpa Preview Tambahan) ===
+        // ================== FULL RAWBT PRINT ==================
         function printViaRawBT() {
             if (!currentPhotoData) {
                 alert("Foto belum tersedia!");
                 return;
             }
 
-            // Auto save terlebih dahulu
+            // Auto save
             savePhoto();
 
             try {
-                // Ambil base64 saja dari data URL
+                // Ambil base64 murni
                 const base64 = currentPhotoData.split(',')[1];
 
-                // Intent scheme RawBT
-                const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+                // Skema RawBT full
+                const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
 
-                // Buat link dan trigger click (cara paling efektif)
+                // Trigger intent
                 const link = document.createElement('a');
-                link.href = intentUrl;
+                link.href = rawbtUrl;
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
 
-                alert("✅ Mengirim ke RawBT...\nPastikan printer USB sudah terhubung via OTG.");
+                alert("✅ Foto dikirim ke RawBT\nPastikan printer USB OTG sudah terhubung.");
             } catch (err) {
                 alert("Gagal mengirim ke RawBT. Pastikan aplikasi RawBT terinstall.");
             }
