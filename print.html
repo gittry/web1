@@ -68,7 +68,7 @@
     </style>
 </head>
 <body>
-    <h1>Gabung 3 Foto → Kompres 150KB & Cetak via RawBT</h1>
+    <h1>Gabung 3 Foto → Kompres & Cetak via RawBT</h1>
 
     <div class="preview-container">
         <div>
@@ -88,13 +88,15 @@
         </div>
     </div>
 
-    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Kompres & Cetak</button>
+    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Kompres & Cetak8</button>
 
     <img id="mergedPreview" src="" alt="Hasil Gabungan">
 
+    <!-- Loading -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <h3 id="loadingText">Menggabungkan foto...</h3>
+        <p id="loadingSubtext"></p>
     </div>
 
     <script>
@@ -118,23 +120,26 @@
         setupPreview(2);
         setupPreview(3);
 
+        // Fungsi hitung ukuran base64 dalam KB
         function getBase64Size(base64) {
             const len = base64.length;
             const sizeBytes = (len * 3) / 4 - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
             return sizeBytes / 1024;
         }
 
-        function compressImage(base64, maxKB = 150) {
+        // Kompres gambar hingga ≤ 200KB
+        function compressImage(base64, maxKB = 200) {
             return new Promise((resolve) => {
-                let quality = 0.85;
+                let quality = 0.92;
                 let compressed = base64;
 
                 const tryCompress = () => {
-                    if (getBase64Size(compressed) <= maxKB || quality <= 0.2) {
+                    const size = getBase64Size(compressed);
+                    if (size <= maxKB || quality <= 0.1) {
                         resolve(compressed);
                         return;
                     }
-                    quality -= 0.06;
+                    quality -= 0.08;
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
@@ -183,22 +188,23 @@
                 ctx.drawImage(img2, 0, height1, targetWidth, height2);
                 ctx.drawImage(img3, 0, height1 + height2, targetWidth, height3);
 
-                let mergedBase64 = canvas.toDataURL('image/jpeg', 0.88);
+                let mergedBase64 = canvas.toDataURL('image/jpeg', 0.92);
 
-                // Kompresi ke max 150KB
-                showLoading("Mengompres gambar...<br>Target max 150KB");
-                const finalBase64 = await compressImage(mergedBase64, 150);
+                // === KOMPRESSI ===
+                showLoading("Mengompres gambar...<br>Target max 200KB");
+                const finalBase64 = await compressImage(mergedBase64, 200);
 
-                // Tampilkan preview
+                // Tampilkan preview hasil kompresi
                 const preview = document.getElementById('mergedPreview');
                 preview.src = finalBase64;
                 preview.style.display = 'block';
 
-                // Unix Timestamp
-                const unixTimestamp = Math.floor(Date.now() / 1000);
-                const filename = `foto-gabungan-${unixTimestamp}.jpg`;
+                // Timestamp untuk nama file
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0,19).replace(/[:T]/g, '-');
+                const filename = `foto-gabungan-${timestamp}.jpg`;
 
-                // 1. Simpan Foto
+                // === 1. Simpan Foto ===
                 showLoading("Menyimpan foto gabungan...");
                 const downloadLink = document.createElement('a');
                 downloadLink.href = finalBase64;
@@ -211,8 +217,9 @@
                 showLoading("Menyiapkan cetak...<br>Tunggu 2 detik");
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // 2. Cetak ke RawBT
+                // === 2. Cetak ke RawBT ===
                 showLoading("Mengirim ke RawBT...");
+
                 const base64Data = finalBase64.split(',')[1];
                 const intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
 
@@ -234,7 +241,7 @@
                 }, 300);
 
                 hideLoading();
-                alert(`✅ Berhasil!\nFoto gabungan (≤150KB) disimpan sebagai:\n${filename}`);
+                alert(`✅ Berhasil!\nFoto gabungan (≤200KB) disimpan sebagai:\n${filename}`);
 
             } catch (e) {
                 hideLoading();
