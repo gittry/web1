@@ -118,11 +118,6 @@
             cursor: pointer;
             z-index: 150;
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-            transition: all 0.15s ease;
-        }
-
-        .capture-btn:active {
-            transform: translateX(-50%) scale(0.92);
         }
 
         /* Shutter Countdown */
@@ -163,7 +158,7 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 25px;
+            gap: 20px;
         }
 
         .preview-btn {
@@ -174,6 +169,12 @@
             border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
+            min-width: 140px;
+        }
+
+        .print-btn {
+            background: #00cc66;
+            color: white;
         }
     </style>
 </head>
@@ -183,7 +184,7 @@
     <div id="landing">
         <div class="logo">CAM</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
-        <p class="permission-message">Izinkan akses kamera untuk melanjutkan.<br>Aplikasi ini hanya menggunakan kamera.</p>
+        <p class="permission-message">Izinkan akses kamera untuk melanjutkan.</p>
     </div>
 
     <!-- Camera Screen -->
@@ -194,8 +195,6 @@
         </div>
 
         <video id="video" autoplay playsinline></video>
-
-        <!-- Shutter Button -->
         <div class="capture-btn" onclick="startShutterCountdown()"></div>
     </div>
 
@@ -209,7 +208,7 @@
         <img id="captured-photo" alt="Captured Photo">
         <div class="preview-actions">
             <button class="preview-btn" onclick="savePhoto()">Simpan</button>
-            <button class="preview-btn" onclick="retakePhoto()" style="background: transparent; color: white; border: 2px solid white;">Ulangi</button>
+            <button id="action-btn" class="preview-btn print-btn" onclick="printViaUSB()">Cetak via USB</button>
         </div>
         <button onclick="closePreview()" style="position: absolute; top: 25px; right: 25px; background: rgba(0,0,0,0.6); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.6rem;">✕</button>
     </div>
@@ -218,6 +217,7 @@
         let video = document.getElementById('video');
         let stream = null;
         let wakeLock = null;
+        let currentPhotoData = null;
 
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
@@ -229,12 +229,10 @@
 
         async function requestCameraPermission() {
             try {
-                // Meminta izin kamera secara eksplisit
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: "environment" }
                 });
 
-                // Jika berhasil, simpan stream dan lanjut ke kamera
                 document.getElementById('landing').style.opacity = '0';
                 
                 setTimeout(() => {
@@ -247,13 +245,7 @@
                 }, 700);
 
             } catch (err) {
-                if (err.name === "NotAllowedError") {
-                    alert("Akses kamera ditolak. Mohon izinkan akses kamera di pengaturan browser Anda.");
-                } else if (err.name === "NotFoundError") {
-                    alert("Kamera tidak ditemukan pada perangkat ini.");
-                } else {
-                    alert("Gagal mengakses kamera: " + err.message);
-                }
+                alert("Akses kamera ditolak atau terjadi kesalahan.");
             }
         }
 
@@ -303,7 +295,8 @@
             }
             ctx.putImageData(imageData, 0, 0);
 
-            document.getElementById('captured-photo').src = canvas.toDataURL('image/jpeg', 0.92);
+            currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
+            document.getElementById('captured-photo').src = currentPhotoData;
             document.getElementById('photo-preview').style.display = 'flex';
         }
 
@@ -312,16 +305,57 @@
         }
 
         function savePhoto() {
+            if (!currentPhotoData) return;
             const link = document.createElement('a');
             link.download = `bw-photo-${Date.now()}.jpg`;
-            link.href = document.getElementById('captured-photo').src;
+            link.href = currentPhotoData;
             link.click();
             alert('Foto berhasil disimpan!');
-            closePreview();
         }
 
-        function retakePhoto() {
-            closePreview();
+        // Cetak via USB Printer menggunakan Print Dialog
+        function printViaUSB() {
+            if (!currentPhotoData) return;
+
+            // Auto save terlebih dahulu
+            savePhoto();
+
+            // Buat halaman cetak sementara
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Cetak Foto B&W</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            min-height: 100vh;
+                            background: #f5f5f5;
+                        }
+                        img {
+                            max-width: 100%;
+                            max-height: 95vh;
+                            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+                        }
+                        @media print {
+                            body { padding: 0; background: white; }
+                            img { box-shadow: none; max-height: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <img src="${currentPhotoData}" onload="window.print(); setTimeout(() => window.close(), 500);">
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            alert("Dialog cetak telah dibuka.\n\nPilih printer USB Anda di dialog cetak.");
         }
 
         function exitCamera() {
