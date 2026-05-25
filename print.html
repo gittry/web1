@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak Foto dengan RawBT (USB OTG)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #preview {
+            max-width: 300px;
+            margin: 20px auto;
+            border: 2px solid #ddd;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cetak Foto ke Printer Thermal via RawBT</h1>
+    
+    <input type="file" id="fileInput" accept="image/*">
+    <br><br>
+    
+    <img id="preview" src="" alt="Preview Foto">
+    <br><br>
+    
+    <button onclick="printWithRawBT()">🖨 Cetak Foto dengan RawBT</button>
+
+    <script>
+        let selectedFile = null;
+
+        // Preview gambar
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('preview').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function printWithRawBT() {
+            if (!selectedFile) {
+                alert("Pilih foto terlebih dahulu!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64 = event.target.result.split(',')[1]; // ambil data base64 saja
+
+                // Intent scheme RawBT untuk mencetak gambar
+                const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+
+                // Coba buka intent
+                const link = document.createElement('a');
+                link.href = intentUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            reader.readAsDataURL(selectedFile);
+        }
+    </script>
+</body>
+</html>
