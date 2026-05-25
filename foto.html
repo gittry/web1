@@ -97,26 +97,27 @@
         let currentFacingMode = "user";
 
         // ================== FILTER CONFIGURATION ==================
-        const FILTER = {
-            // Grayscale weight (standar BT.601)
-            GRAY_RED: 0.34,
-            GRAY_GREEN: 0.5,
-            GRAY_BLUE: 0.16,
+       // ================== FILTER CONFIGURATION (DEFAULT NETRAL) ==================
+const FILTER = {
+    // Grayscale (tetap standar)
+    GRAY_RED: 0.34,
+    GRAY_GREEN: 0.50,
+    GRAY_BLUE: 0.22,
 
-            // SHADOW LIFT (Hanya bagian gelap)
-            SHADOW_THRESHOLD: 120,     // Rentang: 0 - 255. Semakin rendah = lebih banyak area yang dianggap gelap
-            SHADOW_BOOST: 1.0,        // Rentang: 1.0 - 3.0. Semakin tinggi = semakin terang bagian gelap
-            
-            // MIDTONE (area sedang)
-            MIDTONE_THRESHOLD: 0,    // Rentang: SHADOW_THRESHOLD - 255
-            MIDTONE_BOOST: 1.0,       // Rentang: 1.0 - 2.0
+    // Shadow Lift - Hanya bagian gelap
+    SHADOW_THRESHOLD: 110,     // Netral: 100-120
+    SHADOW_BOOST: 1.45,        // Netral: 1.4 - 1.6 (tidak terlalu kuat)
 
-            // GLOBAL BRIGHTNESS (seluruh foto)
-            GLOBAL_BRIGHTNESS: 1.12,   // Rentang: 0.8 - 1.8 (1.0 = normal)
+    // Midtone Lift
+    MIDTONE_THRESHOLD: 170,    // Netral: 160-180
+    MIDTONE_BOOST: 1.15,       // Netral: 1.1 - 1.2
 
-            // CONTRAST
-            CONTRAST: 1.15             // Rentang: 0.5 - 2.0
-        };
+    // Global Brightness
+    GLOBAL_BRIGHTNESS: 1.08,   // Netral: 1.05 - 1.12
+
+    // Contrast
+    CONTRAST: 1.12             // Netral: 1.1 - 1.2
+};
 
         async function requestWakeLock() {
             if ('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
