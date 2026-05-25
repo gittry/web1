@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak 3 Foto Berurutan - RawBT</title>
+    <title>Cetak 3 Foto Gabungan - RawBT</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,45 +23,59 @@
             border: 2px solid #333;
             border-radius: 8px;
         }
+        #mergedPreview {
+            max-width: 400px;
+            border: 3px solid #28a745;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: none;
+        }
         button {
             padding: 14px 28px;
             font-size: 18px;
-            margin: 15px;
+            margin: 10px;
             cursor: pointer;
             border: none;
             border-radius: 8px;
         }
-        .btn-print { background: #28a745; color: white; }
-        .btn-print:hover { background: #218838; }
+        .btn-merge { background: #007bff; color: white; }
+        .btn-print { background: #28a745; color: white; display: none; }
     </style>
 </head>
 <body>
-    <h1>Cetak 3 Foto Berurutan via RawBT (USB OTG)</h1>
+    <h1>Gabung 3 Foto → Cetak via RawBT</h1>
 
     <div class="preview-container">
         <div>
             <p><strong>Foto 1</strong></p>
             <input type="file" id="file1" accept="image/*">
-            <img id="preview1" class="preview" src="" alt="Preview 1">
+            <img id="preview1" class="preview" src="" alt="">
         </div>
         <div>
-            <p><strong>Foto 2</strong></p>
+            <p><strong>Foto 2 (Lebar Acuan)</strong></p>
             <input type="file" id="file2" accept="image/*">
-            <img id="preview2" class="preview" src="" alt="Preview 2">
+            <img id="preview2" class="preview" src="" alt="">
         </div>
         <div>
             <p><strong>Foto 3</strong></p>
             <input type="file" id="file3" accept="image/*">
-            <img id="preview3" class="preview" src="" alt="Preview 3">
+            <img id="preview3" class="preview" src="" alt="">
         </div>
     </div>
 
-    <button class="btn-print" onclick="printAllThree()">🖨 CETAK 3 FOTO BERURUTAN</button>
+    <button class="btn-merge" onclick="mergeImages()">🔗 Gabungkan 3 Foto</button>
+    <br><br>
+
+    <img id="mergedPreview" src="" alt="Hasil Gabungan">
+    <br><br>
+
+    <button id="btnPrint" class="btn-print" onclick="printMerged()">🖨 CETAK GAMBAR GABUNGAN</button>
 
     <script>
         let files = [null, null, null];
+        let mergedBase64 = null;
 
-        // Preview handler
+        // Setup preview
         function setupPreview(index) {
             document.getElementById(`file${index}`).addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -80,38 +94,68 @@
         setupPreview(2);
         setupPreview(3);
 
-        async function printAllThree() {
+        async function mergeImages() {
             if (!files[0] || !files[1] || !files[2]) {
                 alert("Harap pilih ketiga foto terlebih dahulu!");
                 return;
             }
 
-            alert("Mencetak 3 foto berurutan...\nPastikan RawBT sudah diatur Silent Mode!");
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
 
-            for (let i = 0; i < 3; i++) {
-                await printImage(files[i]);
-                // Delay kecil agar printer tidak overlap (tanpa jarak terlalu besar)
-                await new Promise(resolve => setTimeout(resolve, 800));
-            }
+            // Load ketiga gambar
+            const img1 = await loadImage(files[0]);
+            const img2 = await loadImage(files[1]);
+            const img3 = await loadImage(files[2]);
 
-            alert("✅ Semua foto telah dikirim ke RawBT!");
+            // Lebar mengikuti Foto 2
+            const targetWidth = img2.width;
+
+            // Hitung tinggi masing-masing foto yang diskalakan
+            const scale1 = targetWidth / img1.width;
+            const scale2 = 1; // Foto 2 sudah sesuai
+            const scale3 = targetWidth / img3.width;
+
+            const height1 = img1.height * scale1;
+            const height2 = img2.height;
+            const height3 = img3.height * scale3;
+
+            // Set ukuran canvas
+            canvas.width = targetWidth;
+            canvas.height = height1 + height2 + height3;
+
+            // Gambar ke canvas (vertikal)
+            ctx.drawImage(img1, 0, 0, targetWidth, height1);
+            ctx.drawImage(img2, 0, height1, targetWidth, height2);
+            ctx.drawImage(img3, 0, height1 + height2, targetWidth, height3);
+
+            // Tampilkan preview
+            mergedBase64 = canvas.toDataURL('image/jpeg', 0.95);
+            document.getElementById('mergedPreview').src = mergedBase64;
+            document.getElementById('mergedPreview').style.display = 'block';
+
+            // Tampilkan tombol print
+            document.getElementById('btnPrint').style.display = 'inline-block';
         }
 
-        function printImage(file) {
+        function loadImage(file) {
             return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64 = e.target.result.split(',')[1];
-                    const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
-
-                    // Kirim intent
-                    window.location.href = intentUrl;
-
-                    // Tunggu sebentar sebelum resolve
-                    setTimeout(resolve, 600);
-                };
+                reader.onload = (e) => img.src = e.target.result;
                 reader.readAsDataURL(file);
             });
+        }
+
+        function printMerged() {
+            if (!mergedBase64) return;
+
+            const base64Data = mergedBase64.split(',')[1];
+            const intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
+
+            window.location.href = intentUrl;
+            alert("📤 Gambar gabungan dikirim ke RawBT...\nPastikan Silent Mode aktif!");
         }
     </script>
 </body>
