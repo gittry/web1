@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamera B&W</title>
+    <title>Kamera B&W - RawBT USB</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: #111;
@@ -22,7 +17,6 @@
             width: 100vw;
         }
 
-        /* Landing Page */
         #landing {
             position: fixed;
             top: 0; left: 0;
@@ -55,15 +49,6 @@
             border-radius: 60px;
             cursor: pointer;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            margin-top: 1rem;
-        }
-
-        .permission-message {
-            margin-top: 2rem;
-            text-align: center;
-            max-width: 280px;
-            opacity: 0.85;
-            font-size: 0.95rem;
         }
 
         /* Camera Screen */
@@ -120,7 +105,6 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
         }
 
-        /* Shutter Countdown */
         #shutter-countdown {
             position: fixed;
             top: 0; left: 0;
@@ -135,7 +119,6 @@
             font-weight: 700;
         }
 
-        /* Photo Preview */
         #photo-preview {
             position: fixed;
             top: 0; left: 0;
@@ -184,7 +167,9 @@
     <div id="landing">
         <div class="logo">CAM</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
-        <p class="permission-message">Izinkan akses kamera untuk melanjutkan.</p>
+        <p style="margin-top: 2rem; text-align: center; max-width: 280px; opacity: 0.85;">
+            Pastikan aplikasi <strong>RawBT</strong> sudah terinstall<br>untuk cetak via USB OTG
+        </p>
     </div>
 
     <!-- Camera Screen -->
@@ -193,7 +178,6 @@
             <button class="close-btn" onclick="exitCamera()">✕</button>
             <div style="font-size: 1.05rem; font-weight: 500;">B&W CAMERA</div>
         </div>
-
         <video id="video" autoplay playsinline></video>
         <div class="capture-btn" onclick="startShutterCountdown()"></div>
     </div>
@@ -208,7 +192,7 @@
         <img id="captured-photo" alt="Captured Photo">
         <div class="preview-actions">
             <button class="preview-btn" onclick="savePhoto()">Simpan</button>
-            <button id="action-btn" class="preview-btn print-btn" onclick="printViaUSB()">Cetak via USB</button>
+            <button id="action-btn" class="preview-btn print-btn" onclick="printViaRawBT()">Cetak via RawBT USB</button>
         </div>
         <button onclick="closePreview()" style="position: absolute; top: 25px; right: 25px; background: rgba(0,0,0,0.6); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.6rem;">✕</button>
     </div>
@@ -221,9 +205,7 @@
 
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                } catch (e) {}
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
             }
         }
 
@@ -234,18 +216,15 @@
                 });
 
                 document.getElementById('landing').style.opacity = '0';
-                
                 setTimeout(() => {
                     document.getElementById('landing').style.display = 'none';
                     document.getElementById('camera-screen').style.display = 'block';
-                    
                     video.srcObject = stream;
                     video.play();
                     requestWakeLock();
                 }, 700);
-
             } catch (err) {
-                alert("Akses kamera ditolak atau terjadi kesalahan.");
+                alert("Gagal mengakses kamera.");
             }
         }
 
@@ -266,9 +245,8 @@
 
             const interval = setInterval(() => {
                 count--;
-                if (count > 0) {
-                    countText.textContent = count;
-                } else {
+                if (count > 0) countText.textContent = count;
+                else {
                     clearInterval(interval);
                     countdownEl.style.display = 'none';
                     capturePhoto();
@@ -286,7 +264,7 @@
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Black & White Filter
+            // Black & White
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             for (let i = 0; i < data.length; i += 4) {
@@ -310,52 +288,49 @@
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
             link.click();
-            alert('Foto berhasil disimpan!');
         }
 
-        // Cetak via USB Printer menggunakan Print Dialog
-        function printViaUSB() {
+        // Cetak menggunakan RawBT Print Service (USB OTG)
+        function printViaRawBT() {
             if (!currentPhotoData) return;
 
-            // Auto save terlebih dahulu
+            // Auto save dulu
             savePhoto();
 
-            // Buat halaman cetak sementara
+            // Buat window untuk print service RawBT
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Cetak Foto B&W</title>
+                    <title>Cetak ke RawBT</title>
                     <style>
-                        body {
-                            margin: 0;
-                            padding: 20px;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            min-height: 100vh;
-                            background: #f5f5f5;
+                        body { 
+                            margin: 0; 
+                            padding: 15px; 
+                            display: flex; 
+                            justify-content: center; 
+                            background: #f8f8f8; 
                         }
-                        img {
-                            max-width: 100%;
-                            max-height: 95vh;
-                            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-                        }
-                        @media print {
-                            body { padding: 0; background: white; }
-                            img { box-shadow: none; max-height: none; }
+                        img { 
+                            max-width: 100%; 
+                            max-height: 90vh; 
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                         }
                     </style>
                 </head>
                 <body>
-                    <img src="${currentPhotoData}" onload="window.print(); setTimeout(() => window.close(), 500);">
+                    <img src="${currentPhotoData}" 
+                         onload="setTimeout(() => {
+                             window.print();
+                             setTimeout(() => window.close(), 800);
+                         }, 800)">
                 </body>
                 </html>
             `);
             printWindow.document.close();
 
-            alert("Dialog cetak telah dibuka.\n\nPilih printer USB Anda di dialog cetak.");
+            alert("✅ Foto siap dicetak via RawBT USB\n\nPilih 'RawBT' di menu printer jika muncul.");
         }
 
         function exitCamera() {
