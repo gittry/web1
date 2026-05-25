@@ -190,7 +190,7 @@
 
                 // Kompresi jika melebihi 200KB
                 showLoading("Mengompres gambar...<br>Target max 200KB");
-                const finalBase64 = await compressImage(mergedBase64, 200);
+                const finalBase64 = await compressImage(mergedBase64, 150);
 
                 // Tampilkan preview
                 const preview = document.getElementById('mergedPreview');
