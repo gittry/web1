@@ -3,75 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Foto dengan RawBT (USB OTG)</title>
+    <title>Cetak 3 Foto Berurutan - RawBT</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
+            background: #f4f4f4;
         }
-        #preview {
-            max-width: 300px;
-            margin: 20px auto;
-            border: 2px solid #ddd;
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .preview {
+            max-width: 180px;
+            border: 2px solid #333;
+            border-radius: 8px;
         }
         button {
-            padding: 12px 24px;
-            font-size: 16px;
-            margin: 10px;
+            padding: 14px 28px;
+            font-size: 18px;
+            margin: 15px;
             cursor: pointer;
+            border: none;
+            border-radius: 8px;
         }
+        .btn-print { background: #28a745; color: white; }
+        .btn-print:hover { background: #218838; }
     </style>
 </head>
 <body>
-    <h1>Cetak Foto ke Printer Thermal via RawBT</h1>
-    
-    <input type="file" id="fileInput" accept="image/*">
-    <br><br>
-    
-    <img id="preview" src="" alt="Preview Foto">
-    <br><br>
-    
-    <button onclick="printWithRawBT()">🖨 Cetak Foto dengan RawBT</button>
+    <h1>Cetak 3 Foto Berurutan via RawBT (USB OTG)</h1>
+
+    <div class="preview-container">
+        <div>
+            <p><strong>Foto 1</strong></p>
+            <input type="file" id="file1" accept="image/*">
+            <img id="preview1" class="preview" src="" alt="Preview 1">
+        </div>
+        <div>
+            <p><strong>Foto 2</strong></p>
+            <input type="file" id="file2" accept="image/*">
+            <img id="preview2" class="preview" src="" alt="Preview 2">
+        </div>
+        <div>
+            <p><strong>Foto 3</strong></p>
+            <input type="file" id="file3" accept="image/*">
+            <img id="preview3" class="preview" src="" alt="Preview 3">
+        </div>
+    </div>
+
+    <button class="btn-print" onclick="printAllThree()">🖨 CETAK 3 FOTO BERURUTAN</button>
 
     <script>
-        let selectedFile = null;
+        let files = [null, null, null];
 
-        // Preview gambar
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('preview').src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // Preview handler
+        function setupPreview(index) {
+            document.getElementById(`file${index}`).addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    files[index-1] = file;
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        document.getElementById(`preview${index}`).src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
-        function printWithRawBT() {
-            if (!selectedFile) {
-                alert("Pilih foto terlebih dahulu!");
+        setupPreview(1);
+        setupPreview(2);
+        setupPreview(3);
+
+        async function printAllThree() {
+            if (!files[0] || !files[1] || !files[2]) {
+                alert("Harap pilih ketiga foto terlebih dahulu!");
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const base64 = event.target.result.split(',')[1]; // ambil data base64 saja
+            alert("Mencetak 3 foto berurutan...\nPastikan RawBT sudah diatur Silent Mode!");
 
-                // Intent scheme RawBT untuk mencetak gambar
-                const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+            for (let i = 0; i < 3; i++) {
+                await printImage(files[i]);
+                // Delay kecil agar printer tidak overlap (tanpa jarak terlalu besar)
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
 
-                // Coba buka intent
-                const link = document.createElement('a');
-                link.href = intentUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
+            alert("✅ Semua foto telah dikirim ke RawBT!");
+        }
 
-            reader.readAsDataURL(selectedFile);
+        function printImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result.split(',')[1];
+                    const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+
+                    // Kirim intent
+                    window.location.href = intentUrl;
+
+                    // Tunggu sebentar sebelum resolve
+                    setTimeout(resolve, 600);
+                };
+                reader.readAsDataURL(file);
+            });
         }
     </script>
 </body>
