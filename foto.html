@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kamera B&W - RawBT</title>
+    <title>Kamera photo booth</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
@@ -55,8 +55,9 @@
 
     <!-- Landing Page -->
     <div id="landing">
-        <div class="logo">CAM</div>
-        <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
+        <div class="logo">MALAKORA
+PHOTO BOOTH</div>
+        <button class="start-btn" onclick="requestCameraPermission()">MULAI  FOTO</button>
     </div>
 
     <!-- Camera Screen -->
@@ -96,8 +97,7 @@
         let currentPhotoData = null;
         let currentFacingMode = "user";
 
-        // ================== FILTER CONFIGURATION ==================
-       // ================== FILTER CONFIGURATION (DEFAULT NETRAL) ==================
+        
 // ================== FILTER CONFIGURATION - DEFAULT RESET ==================
 const FILTER = {
     // Grayscale Standard (BT.601 - Paling Netral)
