@@ -98,25 +98,26 @@
 
         // ================== FILTER CONFIGURATION ==================
        // ================== FILTER CONFIGURATION (DEFAULT NETRAL) ==================
+// ================== FILTER CONFIGURATION - DEFAULT RESET ==================
 const FILTER = {
-    // Grayscale (tetap standar)
-    GRAY_RED: 0.34,
-    GRAY_GREEN: 0.50,
-    GRAY_BLUE: 0.16,
+    // Grayscale Standard (BT.601 - Paling Netral)
+    GRAY_RED:   0.299,
+    GRAY_GREEN: 0.587,
+    GRAY_BLUE:  0.114,
 
-    // Shadow Lift - Hanya bagian gelap
-    SHADOW_THRESHOLD: 110,     // Netral: 100-120
-    SHADOW_BOOST: 1.8,        // Netral: 1.4 - 1.6 (tidak terlalu kuat)
+    // Shadow Lift (Minimal / Hampir Mati)
+    //SHADOW_THRESHOLD: 90,
+    SHADOW_BOOST: 1.25,        // Hampir tidak ada boost
 
     // Midtone Lift
-    MIDTONE_THRESHOLD: 170,    // Netral: 160-180
-    MIDTONE_BOOST: 1.0,       // Netral: 1.1 - 1.2
+    //MIDTONE_THRESHOLD: 180,
+    MIDTONE_BOOST: 1.15,       // Hampir tidak ada boost
 
     // Global Brightness
-    GLOBAL_BRIGHTNESS: 0.9,   // Netral: 1.05 - 1.12
+    GLOBAL_BRIGHTNESS: 1.0,    // Netral sempurna
 
     // Contrast
-    CONTRAST: 1.0            // Netral: 1.1 - 1.2
+    CONTRAST: 1.0              // Netral sempurna
 };
 
         async function requestWakeLock() {
