@@ -90,6 +90,17 @@
             cursor: pointer;
         }
 
+        .switch-camera {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
         .capture-btn {
             position: fixed;
             bottom: 45px;
@@ -159,6 +170,35 @@
             background: #00cc66;
             color: white;
         }
+
+        /* Loading Overlay */
+        #loading {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 400;
+            color: white;
+        }
+
+        .spinner {
+            border: 5px solid rgba(255,255,255,0.2);
+            border-top: 5px solid #00cc66;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -177,6 +217,7 @@
         <div class="header">
             <button class="close-btn" onclick="exitCamera()">✕</button>
             <div style="font-size: 1.05rem; font-weight: 500;">B&W CAMERA</div>
+            <button class="switch-camera" onclick="switchCamera()">↔</button>
         </div>
         <video id="video" autoplay playsinline></video>
         <div class="capture-btn" onclick="startShutterCountdown()"></div>
@@ -191,10 +232,16 @@
     <div id="photo-preview">
         <img id="captured-photo" alt="Captured Photo">
         <div class="preview-actions">
-            <button class="preview-btn" onclick="savePhoto()">Simpan</button>
+            <button class="preview-btn" onclick="saveAndReturn()">Simpan</button>
             <button id="action-btn" class="preview-btn print-btn" onclick="printViaRawBT()">Cetak via RawBT</button>
         </div>
         <button onclick="closePreview()" style="position: absolute; top: 25px; right: 25px; background: rgba(0,0,0,0.6); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.6rem;">✕</button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p id="loading-text">Sedang memproses...</p>
     </div>
 
     <script>
@@ -202,6 +249,7 @@
         let stream = null;
         let wakeLock = null;
         let currentPhotoData = null;
+        let currentFacingMode = "user"; // Default kamera depan
 
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
@@ -209,12 +257,26 @@
             }
         }
 
+        async function startCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode }
+                });
+                video.srcObject = stream;
+                await video.play();
+            } catch (err) {
+                alert("Gagal mengakses kamera.");
+            }
+        }
+
         async function requestCameraPermission() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" }
+                    video: { facingMode: "user" }
                 });
-
                 document.getElementById('landing').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('landing').style.display = 'none';
@@ -226,6 +288,11 @@
             } catch (err) {
                 alert("Gagal mengakses kamera.");
             }
+        }
+
+        function switchCamera() {
+            currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+            startCamera();
         }
 
         function stopCamera() {
@@ -264,7 +331,7 @@
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Black & White Filter
+            // Black & White
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             for (let i = 0; i < data.length; i += 4) {
@@ -282,50 +349,77 @@
             document.getElementById('photo-preview').style.display = 'none';
         }
 
-        function savePhoto() {
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function saveAndReturn() {
             if (!currentPhotoData) return;
+            showLoading("Menyimpan foto...");
+            
             const link = document.createElement('a');
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
             link.click();
+
+            setTimeout(() => {
+                hideLoading();
+                returnToHome();
+            }, 1500);
         }
 
-        // ================== FULL RAWBT PRINT ==================
         function printViaRawBT() {
-            if (!currentPhotoData) {
-                alert("Foto belum tersedia!");
-                return;
-            }
+            if (!currentPhotoData) return;
+
+            showLoading("Menyimpan & mengirim ke RawBT...");
 
             // Auto save
-            savePhoto();
+            const link = document.createElement('a');
+            link.download = `bw-photo-${Date.now()}.jpg`;
+            link.href = currentPhotoData;
+            link.click();
 
-            try {
-                // Ambil base64 murni
-                const base64 = currentPhotoData.split(',')[1];
+            // Tunggu 3 detik
+            setTimeout(() => {
+                try {
+                    const base64 = currentPhotoData.split(',')[1];
+                    const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
 
-                // Skema RawBT full
-                const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+                    const a = document.createElement('a');
+                    a.href = rawbtUrl;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
 
-                // Trigger intent
-                const link = document.createElement('a');
-                link.href = rawbtUrl;
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                    setTimeout(() => {
+                        hideLoading();
+                        returnToHome();
+                    }, 800);
+                } catch (err) {
+                    hideLoading();
+                    alert("Gagal mengirim ke RawBT.");
+                    returnToHome();
+                }
+            }, 3000);
+        }
 
-                alert("✅ Foto dikirim ke RawBT\nPastikan printer USB OTG sudah terhubung.");
-            } catch (err) {
-                alert("Gagal mengirim ke RawBT. Pastikan aplikasi RawBT terinstall.");
-            }
+        function returnToHome() {
+            stopCamera();
+            document.getElementById('camera-screen').style.display = 'none';
+            document.getElementById('photo-preview').style.display = 'none';
+            document.getElementById('landing').style.display = 'flex';
+            document.getElementById('landing').style.opacity = '1';
+            currentPhotoData = null;
         }
 
         function exitCamera() {
-            stopCamera();
-            document.getElementById('camera-screen').style.display = 'none';
-            document.getElementById('landing').style.display = 'flex';
-            document.getElementById('landing').style.opacity = '1';
+            returnToHome();
             if (wakeLock) wakeLock.release();
         }
 
