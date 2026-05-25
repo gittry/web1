@@ -40,9 +40,7 @@
             background: #007bff;
             color: white;
         }
-        button:hover {
-            background: #0056b3;
-        }
+        button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -66,7 +64,7 @@
         </div>
     </div>
 
-    <button onclick="mergeAndPrint()">🔗 Gabungkan, Simpan & Cetak</button>
+    <button onclick="mergeAndPrint()">🔗 Gabungkan, Simpan & Cetak2</button>
 
     <img id="mergedPreview" src="" alt="Hasil Gabungan">
 
@@ -127,26 +125,43 @@
             preview.src = mergedBase64;
             preview.style.display = 'block';
 
-            // === 1. Simpan (Download) Foto Gabungan ===
+            // 1. Simpan Foto Gabungan
             const downloadLink = document.createElement('a');
             downloadLink.href = mergedBase64;
-            downloadLink.download = 'foto-gabungan.jpg';
+            downloadLink.download = `foto-gabungan-${new Date().toISOString().slice(0,10)}.jpg`;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
 
-            // === 2. Cetak ke RawBT ===
-            const base64Data = mergedBase64.split(',')[1];
-            const intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
+            // 2. Cetak ke RawBT (Versi yang lebih stabil)
+            try {
+                const base64Data = mergedBase64.split(',')[1];
+                
+                // Metode 1: RawBT scheme (paling umum)
+                let intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
+                
+                // Kirim intent
+                const link = document.createElement('a');
+                link.href = intentUrl;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
-            const printLink = document.createElement('a');
-            printLink.href = intentUrl;
-            printLink.style.display = 'none';
-            document.body.appendChild(printLink);
-            printLink.click();
-            document.body.removeChild(printLink);
+                // Fallback jika metode pertama gagal (beberapa device butuh ini)
+                setTimeout(() => {
+                    const fallbackLink = document.createElement('a');
+                    fallbackLink.href = `intent:#Intent;action=android.intent.action.VIEW;data=${encodeURIComponent(intentUrl)};end`;
+                    fallbackLink.style.display = 'none';
+                    document.body.appendChild(fallbackLink);
+                    fallbackLink.click();
+                    document.body.removeChild(fallbackLink);
+                }, 300);
 
-            alert("✅ Foto gabungan berhasil disimpan dan dikirim ke RawBT!\nPastikan RawBT dalam mode Silent/Auto Print.");
+                alert("✅ Foto gabungan berhasil disimpan dan dikirim ke RawBT!\n\nJika masih tidak cetak:\n1. Buka RawBT → Settings → Aktifkan Silent Mode\n2. Pastikan printer USB OTG terhubung");
+            } catch (e) {
+                alert("Terjadi kesalahan saat mengirim ke RawBT: " + e.message);
+            }
         }
 
         function loadImage(file) {
