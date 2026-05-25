@@ -88,11 +88,10 @@
         </div>
     </div>
 
-    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Kompres & Cetak5</button>
+    <button id="actionBtn" onclick="mergeAndPrint()">🔗 Gabungkan, Kompres & Cetak6</button>
 
     <img id="mergedPreview" src="" alt="Hasil Gabungan">
 
-    <!-- Loading -->
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <h3 id="loadingText">Menggabungkan foto...</h3>
@@ -125,26 +124,23 @@
             return sizeBytes / 1024;
         }
 
-        // Kompresi lebih stabil ke target 150KB
         function compressImage(base64, maxKB = 150) {
             return new Promise((resolve) => {
                 let quality = 0.85;
                 let compressed = base64;
 
                 const tryCompress = () => {
-                    const size = getBase64Size(compressed);
-                    if (size <= maxKB || quality <= 0.15) {
+                    if (getBase64Size(compressed) <= maxKB || quality <= 0.2) {
                         resolve(compressed);
                         return;
                     }
-                    quality -= 0.07;
+                    quality -= 0.06;
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        canvas.width = img.width * 0.95;   // sedikit resize untuk membantu kompresi
-                        canvas.height = img.height * 0.95;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
                         compressed = canvas.toDataURL('image/jpeg', quality);
                         tryCompress();
                     };
@@ -163,8 +159,6 @@
 
             btn.disabled = true;
             showLoading("Menggabungkan 3 foto...");
-
-            let finalBase64 = null;
 
             try {
                 const canvas = document.createElement('canvas');
@@ -191,42 +185,34 @@
 
                 let mergedBase64 = canvas.toDataURL('image/jpeg', 0.88);
 
-                // Kompresi
+                // Kompresi ke max 150KB
                 showLoading("Mengompres gambar...<br>Target max 150KB");
-                finalBase64 = await compressImage(mergedBase64, 150);
+                const finalBase64 = await compressImage(mergedBase64, 150);
 
-            } catch (e) {
-                console.error("Kompresi error:", e);
-                showLoading("Menggunakan gambar tanpa kompresi...");
-                finalBase64 = mergedBase64 || canvas.toDataURL('image/jpeg', 0.7);
-            }
+                // Tampilkan preview
+                const preview = document.getElementById('mergedPreview');
+                preview.src = finalBase64;
+                preview.style.display = 'block';
 
-            // Tampilkan preview
-            const preview = document.getElementById('mergedPreview');
-            preview.src = finalBase64;
-            preview.style.display = 'block';
+                // Unix Timestamp
+                const unixTimestamp = Math.floor(Date.now() / 1000);
+                const filename = `foto-gabungan-${unixTimestamp}.jpg`;
 
-            // UNIX Timestamp
-            const unixTimestamp = Math.floor(Date.now() / 1000);
-            const filename = `foto-gabungan-${unixTimestamp}.jpg`;
+                // 1. Simpan Foto
+                showLoading("Menyimpan foto gabungan...");
+                const downloadLink = document.createElement('a');
+                downloadLink.href = finalBase64;
+                downloadLink.download = filename;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
 
-            // 1. Simpan Foto
-            showLoading("Menyimpan foto gabungan...");
-            const downloadLink = document.createElement('a');
-            downloadLink.href = finalBase64;
-            downloadLink.download = filename;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+                // Tunggu 2 detik
+                showLoading("Menyiapkan cetak...<br>Tunggu 2 detik");
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Tunggu 2 detik setelah kompres & simpan
-            showLoading("Menyiapkan cetak ke printer...<br>Tunggu 2 detik");
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // 2. Cetak ke RawBT
-            showLoading("Mengirim ke RawBT...");
-
-            try {
+                // 2. Cetak ke RawBT
+                showLoading("Mengirim ke RawBT...");
                 const base64Data = finalBase64.split(',')[1];
                 const intentUrl = `rawbt:data:image/jpeg;base64,${base64Data}`;
 
@@ -245,13 +231,16 @@
                     document.body.appendChild(fallback);
                     fallback.click();
                     document.body.removeChild(fallback);
-                }, 400);
+                }, 300);
+
+                hideLoading();
+                alert(`✅ Berhasil!\nFoto gabungan (≤150KB) disimpan sebagai:\n${filename}`);
 
             } catch (e) {
-                console.error("Print error:", e);
+                hideLoading();
+                alert("Terjadi kesalahan: " + e.message);
             }
 
-            hideLoading();
             btn.disabled = false;
         }
 
