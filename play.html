@@ -30,18 +30,16 @@
 
     <!-- Big Counter -->
     <div class="text-center mb-10">
-      <p class="text-indigo-400 text-sm mb-2 tracking-widest">JUMLAH TOGGLE</p>
+      <p class="text-indigo-400 text-sm mb-2 tracking-widest">JUMLAH PERUBAHAN PLAY/PAUSE</p>
       <div id="counter" class="counter">0</div>
     </div>
 
     <!-- Player Card -->
     <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
-      <!-- Album Art -->
       <div class="w-48 h-48 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-inner overflow-hidden">
         <span class="text-8xl">🎵</span>
       </div>
 
-      <!-- Song Info -->
       <div class="text-center mb-8">
         <h2 class="text-2xl font-semibold">Play Song</h2>
         <p class="text-indigo-300">Unknown Artist</p>
@@ -81,14 +79,10 @@
         </button>
       </div>
     </div>
-
-    <p class="text-center text-indigo-400 text-sm mt-8">Klik Play/Pause untuk menambah counter</p>
   </div>
 
-  <!-- Audio Element -->
   <audio id="audio" loop>
     <source src="play.mp3" type="audio/mpeg">
-    Browser Anda tidak mendukung audio.
   </audio>
 
   <script>
@@ -103,49 +97,65 @@
     let toggleCount = 0;
     let isPlaying = false;
 
-    // Update counter
     function updateCounter() {
       toggleCount++;
       counterEl.textContent = toggleCount;
       
-      // Efek animasi
-      counterEl.style.transform = 'scale(1.1)';
-      setTimeout(() => {
-        counterEl.style.transform = 'scale(1)';
-      }, 200);
+      // Animasi
+      counterEl.style.transform = 'scale(1.15)';
+      setTimeout(() => counterEl.style.transform = 'scale(1)', 180);
+    }
+
+    function updateButton() {
+      if (isPlaying) {
+        playIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v2m4-2v2m7-5a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
+        `;
+      } else {
+        playIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
+        `;
+      }
     }
 
     // Toggle Play/Pause
     function togglePlay() {
       if (isPlaying) {
         audio.pause();
-        playIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
-        `;
       } else {
         audio.play();
-        playIcon.innerHTML = `
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v2m4-2v2m7-5a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
-        `;
       }
-      isPlaying = !isPlaying;
-      updateCounter();
     }
 
-    // Update progress bar
+    // Event Listener untuk mendeteksi perubahan state audio secara real
+    audio.addEventListener('play', () => {
+      if (!isPlaying) {
+        isPlaying = true;
+        updateCounter();
+        updateButton();
+      }
+    });
+
+    audio.addEventListener('pause', () => {
+      if (isPlaying) {
+        isPlaying = false;
+        updateCounter();
+        updateButton();
+      }
+    });
+
+    // Progress Bar & Time
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         const progress = (audio.currentTime / audio.duration) * 100;
         progressEl.style.width = `${progress}%`;
-
-        // Update waktu
         currentTimeEl.textContent = formatTime(audio.currentTime);
         durationEl.textContent = formatTime(audio.duration);
       }
     });
 
-    // Auto replay (meskipun ada loop, kita tambah event untuk kepastian)
+    // Auto Replay
     audio.addEventListener('ended', () => {
       audio.currentTime = 0;
       audio.play();
@@ -157,7 +167,17 @@
       return `\( {min}: \){sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // Keyboard shortcut (Space untuk play/pause)
+    // Auto Play setelah load
+    window.addEventListener('load', () => {
+      // Beberapa browser memerlukan interaksi, tapi kita coba dulu
+      audio.play().then(() => {
+        console.log("Auto play berhasil");
+      }).catch(() => {
+        console.log("Auto play diblokir browser - klik play manual");
+      });
+    });
+
+    // Keyboard Support
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -165,7 +185,7 @@
       }
     });
 
-    // Inisialisasi
+    // Load metadata
     audio.addEventListener('loadedmetadata', () => {
       durationEl.textContent = formatTime(audio.duration);
     });
