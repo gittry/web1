@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bluetooth Play/Pause Detector</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; }
+    button { padding: 15px 30px; font-size: 18px; margin: 10px; }
+    #status { font-size: 20px; margin: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Bluetooth Audio Controller</h1>
+  <div id="status">Status: Siap</div>
+  
+  <button id="playBtn">▶ Play</button>
+  <button id="pauseBtn">⏸ Pause</button>
+
+  <script>
+    let isPlaying = false;
+    const statusEl = document.getElementById('status');
+
+    function updateStatus() {
+      statusEl.textContent = isPlaying ? 
+        "Status: Playing (Bluetooth siap)" : 
+        "Status: Paused";
+    }
+
+    // Tombol di website
+    document.getElementById('playBtn').addEventListener('click', () => {
+      isPlaying = true;
+      updateStatus();
+      simulatePlay();
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      isPlaying = false;
+      updateStatus();
+      simulatePause();
+    });
+
+    // Deteksi tombol Bluetooth Headset (MediaPlayPause)
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'MediaPlayPause') {
+        isPlaying = !isPlaying;
+        updateStatus();
+        
+        if (isPlaying) {
+          simulatePlay();
+        } else {
+          simulatePause();
+        }
+      }
+    });
+
+    // Media Session API (supaya headset bisa kontrol website)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Bluetooth Controller',
+        artist: 'Website Control',
+        album: 'Demo'
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        isPlaying = true;
+        updateStatus();
+        simulatePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        isPlaying = false;
+        updateStatus();
+        simulatePause();
+      });
+    }
+
+    // Simulasi aksi (bisa diganti dengan API lain)
+    function simulatePlay() {
+      console.log("🎵 Play command dikirim");
+      // Di sini bisa tambah logic lain (misal kirim ke server, kontrol perangkat IoT, dll)
+    }
+
+    function simulatePause() {
+      console.log("⏸ Pause command dikirim");
+    }
+
+    // Inisialisasi
+    updateStatus();
+  </script>
+</body>
+</html>
