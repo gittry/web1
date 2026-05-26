@@ -43,7 +43,7 @@
     <!-- Player Card -->
     <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20">
       
-      <!-- Camera Area (Belakang) -->
+      <!-- Camera Area -->
       <div id="cameraContainer" class="w-48 h-48 mx-auto mb-8 rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-white/30 relative">
         <video id="cameraFeed" autoplay playsinline muted></video>
         <div id="cameraPlaceholder" class="absolute inset-0 flex items-center justify-center bg-black/70 text-center">
@@ -71,17 +71,18 @@
       </div>
 
       <!-- Controls -->
-      <div class="flex items-center justify-center gap-8">
+      <div class="flex items-center justify-center gap-10">
         <button onclick="prevTrack()" class="text-indigo-300 hover:text-white transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
+        <!-- Tombol Play/Pause yang lebih sederhana -->
         <button id="playPauseBtn" onclick="togglePlay()" 
-                class="w-16 h-16 bg-white text-indigo-900 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg">
-          <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <!-- Default Play Icon -->
+                class="w-20 h-20 bg-white/90 hover:bg-white text-indigo-950 rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-md">
+          <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <!-- Default Play -->
           </svg>
         </button>
 
@@ -121,7 +122,6 @@
       toggleCount++;
       counterEl.textContent = toggleCount;
       
-      // Animasi
       counterEl.style.transform = 'scale(1.2)';
       setTimeout(() => counterEl.style.transform = 'scale(1)', 200);
 
@@ -133,10 +133,12 @@
 
     function updateButton() {
       if (isPlaying) {
+        // Pause Icon (sederhana)
         playIcon.innerHTML = `
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v2m4-2v2m7-5a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
         `;
       } else {
+        // Play Icon (sederhana)
         playIcon.innerHTML = `
           <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 4.01V8" />
@@ -191,39 +193,37 @@
       return `\( {min}: \){sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // ==================== TAKE PHOTO ====================
+    // ==================== TAKE PHOTO dengan Unix Timestamp ====================
     function takePhoto() {
-      canvas.width = cameraFeed.videoWidth;
-      canvas.height = cameraFeed.videoHeight;
+      canvas.width = cameraFeed.videoWidth || 640;
+      canvas.height = cameraFeed.videoHeight || 480;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
 
-      // Simpan sebagai file
+      const unixTimestamp = Math.floor(Date.now() / 1000);
+
       canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `capture_\( {toggleCount}_ \){new Date().toISOString().slice(0,19).replace(/:/g,'-')}.jpg`;
+        a.download = `capture_${unixTimestamp}.jpg`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      }, 'image/jpeg', 0.95);
+      }, 'image/jpeg', 0.92);
     }
 
-    // ==================== CAMERA (BELAKANG) ====================
+    // ==================== CAMERA (Belakang) ====================
     async function startBackCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: { exact: "environment" } 
-          } 
+          video: { facingMode: { exact: "environment" } } 
         });
         cameraFeed.srcObject = stream;
         cameraPlaceholder.style.display = 'none';
       } catch (err) {
-        console.error(err);
-        // Fallback ke kamera depan jika belakang tidak tersedia
+        // Fallback ke kamera depan
         try {
           stream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "user" } 
@@ -239,17 +239,13 @@
     // ==================== INIT ====================
     window.addEventListener('load', async () => {
       await startBackCamera();
-
       audio.load();
 
       setTimeout(() => {
-        audio.play().catch(() => {
-          console.log("Auto play diblokir browser");
-        });
-      }, 1000);
+        audio.play().catch(() => {});
+      }, 800);
     });
 
-    // Keyboard
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
