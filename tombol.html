@@ -3,90 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bluetooth Play/Pause Detector</title>
+  <title>Bluetooth Button Detector</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 50px; }
-    button { padding: 15px 30px; font-size: 18px; margin: 10px; }
-    #status { font-size: 20px; margin: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #111;
+      color: white;
+    }
+    #status {
+      font-size: 32px;
+      margin: 40px 0;
+      padding: 30px;
+      border-radius: 15px;
+      min-height: 80px;
+    }
+    .playing { background: #006400; }
+    button {
+      padding: 15px 35px;
+      font-size: 18px;
+      margin: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Bluetooth Audio Controller</h1>
-  <div id="status">Status: Siap</div>
+  <h1>Bluetooth Play/Pause Detector</h1>
+  <div id="status">Status: Paused</div>
   
-  <button id="playBtn">▶ Play</button>
-  <button id="pauseBtn">⏸ Pause</button>
+  <button onclick="togglePlay()">Toggle Play/Pause</button>
 
   <script>
     let isPlaying = false;
     const statusEl = document.getElementById('status');
 
-    function updateStatus() {
-      statusEl.textContent = isPlaying ? 
-        "Status: Playing (Bluetooth siap)" : 
-        "Status: Paused";
+    function updateUI() {
+      if (isPlaying) {
+        statusEl.textContent = "▶ PLAYING (Bluetooth siap)";
+        statusEl.classList.add('playing');
+      } else {
+        statusEl.textContent = "⏸ PAUSED";
+        statusEl.classList.remove('playing');
+      }
     }
 
-    // Tombol di website
-    document.getElementById('playBtn').addEventListener('click', () => {
-      isPlaying = true;
-      updateStatus();
-      simulatePlay();
-    });
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      updateUI();
+      updateMediaSession();
+    }
 
-    document.getElementById('pauseBtn').addEventListener('click', () => {
-      isPlaying = false;
-      updateStatus();
-      simulatePause();
-    });
-
-    // Deteksi tombol Bluetooth Headset (MediaPlayPause)
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'MediaPlayPause') {
-        isPlaying = !isPlaying;
-        updateStatus();
-        
-        if (isPlaying) {
-          simulatePlay();
-        } else {
-          simulatePause();
-        }
+    // === MEDIA SESSION API (Kunci utama) ===
+    function setupMediaSession() {
+      if (!('mediaSession' in navigator)) {
+        statusEl.textContent = "Browser tidak support Media Session";
+        return;
       }
-    });
 
-    // Media Session API (supaya headset bisa kontrol website)
-    if ('mediaSession' in navigator) {
+      // Set metadata
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: 'Bluetooth Controller',
-        artist: 'Website Control',
-        album: 'Demo'
+        title: "Bluetooth Controller",
+        artist: "No Audio Playing",
+        album: "Detector Mode"
       });
 
+      // Set state
+      updateMediaSession();
+
+      // Handler untuk tombol Bluetooth
       navigator.mediaSession.setActionHandler('play', () => {
         isPlaying = true;
-        updateStatus();
-        simulatePlay();
+        updateUI();
+        updateMediaSession();
+        console.log("✅ Play dari Bluetooth Headset");
       });
 
       navigator.mediaSession.setActionHandler('pause', () => {
         isPlaying = false;
-        updateStatus();
-        simulatePause();
+        updateUI();
+        updateMediaSession();
+        console.log("✅ Pause dari Bluetooth Headset");
       });
     }
 
-    // Simulasi aksi (bisa diganti dengan API lain)
-    function simulatePlay() {
-      console.log("🎵 Play command dikirim");
-      // Di sini bisa tambah logic lain (misal kirim ke server, kontrol perangkat IoT, dll)
-    }
-
-    function simulatePause() {
-      console.log("⏸ Pause command dikirim");
+    function updateMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+      }
     }
 
     // Inisialisasi
-    updateStatus();
+    setupMediaSession();
+    updateUI();
   </script>
 </body>
 </html>
