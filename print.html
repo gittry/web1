@@ -93,7 +93,7 @@
 
     <!-- Landing Page -->
     <div id="landing">
-        <div class="logo">CAM BOOTH</div>
+        <div class="logo">CAM</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
     </div>
 
@@ -183,12 +183,10 @@
             toggleCount++;
             document.getElementById('playCount').textContent = toggleCount;
 
-            // Jika toggleCount bertambah kecuali dari 0 ke 1 → jalankan Countdown
             if (oldCount >= 1) {
                 startShutterCountdown();
             }
 
-            // Tombol merah jika count >= 1
             if (toggleCount >= 1) {
                 document.getElementById('captureBtn').style.background = '#ef4444';
             }
@@ -213,7 +211,7 @@
                     clearInterval(interval);
                     countdownEl.style.display = 'none';
                     captureBtn.style.background = 'rgba(255,255,255,0.95)';
-                    capturePhoto();   // Tampilkan preview
+                    capturePhoto();
                 }
             }, 900);
         }
@@ -242,7 +240,6 @@
             ctx.putImageData(imageData, 0, 0);
             currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
             
-            // Tampilkan Preview
             document.getElementById('captured-photo').src = currentPhotoData;
             document.getElementById('photo-preview').style.display = 'flex';
         }
@@ -262,7 +259,9 @@
             }
         });
 
-        function closePreview() { document.getElementById('photo-preview').style.display = 'none'; }
+        function closePreview() { 
+            document.getElementById('photo-preview').style.display = 'none'; 
+        }
 
         function saveAndReturn() {
             if (!currentPhotoData) return;
@@ -270,12 +269,19 @@
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
             link.click();
+            resetToggleCount();
             returnToHome();
         }
 
-              function printViaRawBT() {
+        function printViaRawBT() {
             if (!currentPhotoData) return;
-            showLoading("Menyimpan & mengirim ke RawBT...");
+
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = "Menyimpan & mengirim ke RawBT...";
+            loading.style.display = 'flex';
+
+            // Simpan dulu
             const link = document.createElement('a');
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
@@ -285,14 +291,32 @@
                 try {
                     const base64 = currentPhotoData.split(',')[1];
                     const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+                    
                     const a = document.createElement('a');
-                    a.href = rawbtUrl; a.style.display = 'none';
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                    setTimeout(() => { hideLoading(); returnToHome(); }, 800);
+                    a.href = rawbtUrl;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                        resetToggleCount();
+                        returnToHome();
+                    }, 800);
                 } catch (err) {
-                    hideLoading(); alert("Gagal mengirim ke RawBT."); returnToHome();
+                    loading.style.display = 'none';
+                    alert("Gagal mengirim ke RawBT.");
+                    resetToggleCount();
+                    returnToHome();
                 }
             }, 3000);
+        }
+
+        function resetToggleCount() {
+            toggleCount = 0;
+            document.getElementById('playCount').textContent = '0';
+            document.getElementById('captureBtn').style.background = 'rgba(255,255,255,0.95)';
         }
 
         function returnToHome() {
