@@ -191,6 +191,7 @@
             }, 900);
         }
 
+          // ================== FILTER LENGKAP ==================
         function capturePhoto() {
             if (!stream) return;
 
@@ -204,57 +205,35 @@
             const data = imageData.data;
 
             for (let i = 0; i < data.length; i += 4) {
-                let gray = data[i] * FILTER.GRAY_RED + data[i+1] * FILTER.GRAY_GREEN + data[i+2] * FILTER.GRAY_BLUE;
-                if (gray < FILTER.SHADOW_THRESHOLD) gray *= FILTER.SHADOW_BOOST;
-                else if (gray < FILTER.MIDTONE_THRESHOLD) gray *= FILTER.MIDTONE_BOOST;
+                // 1. Grayscale
+                let gray = data[i] * FILTER.GRAY_RED + 
+                          data[i + 1] * FILTER.GRAY_GREEN + 
+                          data[i + 2] * FILTER.GRAY_BLUE;
+
+                // 2. Shadow Lift (Hanya bagian gelap)
+                if (gray < FILTER.SHADOW_THRESHOLD) {
+                    gray *= FILTER.SHADOW_BOOST;
+                } 
+                // 3. Midtone Lift
+                else if (gray < FILTER.MIDTONE_THRESHOLD) {
+                    gray *= FILTER.MIDTONE_BOOST;
+                }
+
+                // 4. Global Brightness
                 gray *= FILTER.GLOBAL_BRIGHTNESS;
+
+                // 5. Clamp value
                 gray = Math.min(255, Math.max(0, gray));
-                data[i] = data[i+1] = data[i+2] = gray;
+
+                // Terapkan
+                data[i] = data[i + 1] = data[i + 2] = gray;
             }
 
             ctx.putImageData(imageData, 0, 0);
             currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
             
-            // Simpan otomatis
-            const link = document.createElement('a');
-            link.download = `bw-photo-${Date.now()}.jpg`;
-            link.href = currentPhotoData;
-            link.click();
-        }
-
-        // Audio Events
-        bgMusic.addEventListener('play', () => {
-            if (!isPlaying) {
-                isPlaying = true;
-                updatePlayCount();
-            }
-        });
-
-        bgMusic.addEventListener('pause', () => {
-            if (isPlaying) {
-                isPlaying = false;
-                updatePlayCount();
-            }
-        });
-
-        function closePreview() { document.getElementById('photo-preview').style.display = 'none'; }
-
-        function saveAndReturn() {
-            if (!currentPhotoData) return;
-            const link = document.createElement('a');
-            link.download = `bw-photo-${Date.now()}.jpg`;
-            link.href = currentPhotoData;
-            link.click();
-            returnToHome();
-        }
-
-        function printViaRawBT() {
-            if (!currentPhotoData) return;
-            const link = document.createElement('a');
-            link.download = `bw-photo-${Date.now()}.jpg`;
-            link.href = currentPhotoData;
-            link.click();
-            returnToHome();
+            document.getElementById('captured-photo').src = currentPhotoData;
+            document.getElementById('photo-preview').style.display = 'flex';
         }
 
         function returnToHome() {
