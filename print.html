@@ -179,26 +179,15 @@
         }
 
         function startShutterCountdown() {
-            const countdownEl = document.getElementById('shutter-countdown');
-            const countText = document.getElementById('count-text');
-            const captureBtn = document.getElementById('captureBtn');
+            const el = document.getElementById('shutter-countdown');
+            const txt = document.getElementById('count-text');
             let count = 3;
-
-            countdownEl.style.display = 'flex';
-            countText.textContent = count;
-
-            if (toggleCount >= 1) captureBtn.style.background = '#ef4444';
-
+            el.style.display = 'flex';
+            txt.textContent = count;
             const interval = setInterval(() => {
                 count--;
-                countText.textContent = count;
-
-                if (count <= 0) {
-                    clearInterval(interval);
-                    countdownEl.style.display = 'none';
-                    captureBtn.style.background = 'rgba(255,255,255,0.95)';
-                    capturePhoto();
-                }
+                if (count > 0) txt.textContent = count;
+                else { clearInterval(interval); el.style.display = 'none'; capturePhoto(); }
             }, 900);
         }
 
