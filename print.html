@@ -300,17 +300,17 @@
                     document.body.removeChild(a);
 
                     setTimeout(() => {
-                        loading.style.display = 'none';
-                        resetToggleCount();
-                        returnToHome();
-                    }, 800);
-                } catch (err) {
-                    loading.style.display = 'none';
-                    alert("Gagal mengirim ke RawBT.");
-                    resetToggleCount();
-                    returnToHome();
-                }
-            }, 3000);
+                loading.style.display = 'none';
+                resetToggleCount();     // ← Tambahan ini
+                returnToHome();
+            }, 800);
+        } catch (err) {
+            loading.style.display = 'none';
+            alert("Gagal mengirim ke RawBT.");
+            resetToggleCount();         // ← Tambahan ini
+            returnToHome();
+        }
+    }, 3000);
         }
 
         function resetToggleCount() {
