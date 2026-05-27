@@ -76,7 +76,7 @@
 
     <!-- Landing Page -->
     <div id="landing">
-        <div class="logo">CAM2</div>
+        <div class="logo">CAM3</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
     </div>
 
@@ -179,20 +179,30 @@
         }
 
         function startShutterCountdown() {
-            const el = document.getElementById('shutter-countdown');
-            const txt = document.getElementById('count-text');
+            const countdownEl = document.getElementById('shutter-countdown');
+            const countText = document.getElementById('count-text');
+            const captureBtn = document.getElementById('captureBtn');
             let count = 3;
-            el.style.display = 'flex';
-            txt.textContent = count;
+
+            countdownEl.style.display = 'flex';
+            countText.textContent = count;
+
+            if (toggleCount >= 1) captureBtn.style.background = '#ef4444';
+
             const interval = setInterval(() => {
                 count--;
-                if (count > 0) txt.textContent = count;
-                else { clearInterval(interval); el.style.display = 'none'; capturePhoto(); }
+                countText.textContent = count;
+
+                if (count <= 0) {
+                    clearInterval(interval);
+                    countdownEl.style.display = 'none';
+                    captureBtn.style.background = 'rgba(255,255,255,0.95)';
+                    capturePhoto();
+                }
             }, 900);
         }
 
-          // ================== FILTER LENGKAP ==================
-        function capturePhoto() {
+   function capturePhoto() {
     if (!stream) return;
 
     const canvas = document.createElement('canvas');
@@ -220,6 +230,61 @@
     document.getElementById('captured-photo').src = currentPhotoData;
     document.getElementById('photo-preview').style.display = 'flex';
 }
+
+            ctx.putImageData(imageData, 0, 0);
+            currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
+            
+            // Simpan otomatis
+            const link = document.createElement('a');
+            link.download = `bw-photo-${Date.now()}.jpg`;
+            link.href = currentPhotoData;
+            link.click();
+        }
+
+        // Audio Events
+        bgMusic.addEventListener('play', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                updatePlayCount();
+            }
+        });
+
+        bgMusic.addEventListener('pause', () => {
+            if (isPlaying) {
+                isPlaying = false;
+                updatePlayCount();
+            }
+        });
+
+        function closePreview() { document.getElementById('photo-preview').style.display = 'none'; }
+
+        function saveAndReturn() {
+            if (!currentPhotoData) return;
+            const link = document.createElement('a');
+            link.download = `bw-photo-${Date.now()}.jpg`;
+            link.href = currentPhotoData;
+            link.click();
+            returnToHome();
+        }
+
+        function printViaRawBT() {
+            if (!currentPhotoData) return;
+            const link = document.createElement('a');
+            link.download = `bw-photo-${Date.now()}.jpg`;
+            link.href = currentPhotoData;
+            link.click();
+            returnToHome();
+        }
+
+        function returnToHome() {
+            stopCamera();
+            bgMusic.pause();
+            document.getElementById('camera-screen').style.display = 'none';
+            document.getElementById('photo-preview').style.display = 'none';
+            document.getElementById('landing').style.display = 'flex';
+            document.getElementById('landing').style.opacity = '1';
+            currentPhotoData = null;
+        }
 
         function exitCamera() { returnToHome(); }
 
