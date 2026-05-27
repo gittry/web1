@@ -76,7 +76,7 @@
 
     <!-- Landing Page -->
     <div id="landing">
-        <div class="logo">CAM1</div>
+        <div class="logo">CAM</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
     </div>
 
@@ -161,15 +161,20 @@
             if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
         }
 
-        // Update Counter & Tombol Merah
+        // Update Counter
         function updatePlayCount() {
+            const oldCount = toggleCount;
             toggleCount++;
             document.getElementById('playCount').textContent = toggleCount;
 
-            // Jika count >= 1, tombol capture menjadi merah saat countdown
+            // Jika toggleCount bertambah kecuali dari 0 ke 1 → jalankan Countdown
+            if (oldCount >= 1) {
+                startShutterCountdown();
+            }
+
+            // Tombol merah jika count >= 1
             if (toggleCount >= 1) {
-                const captureBtn = document.getElementById('captureBtn');
-                captureBtn.style.background = '#ef4444';
+                document.getElementById('captureBtn').style.background = '#ef4444';
             }
         }
 
@@ -182,7 +187,6 @@
             countdownEl.style.display = 'flex';
             countText.textContent = count;
 
-            // Tombol merah saat countdown
             if (toggleCount >= 1) captureBtn.style.background = '#ef4444';
 
             const interval = setInterval(() => {
@@ -192,7 +196,7 @@
                 if (count <= 0) {
                     clearInterval(interval);
                     countdownEl.style.display = 'none';
-                    captureBtn.style.background = 'rgba(255,255,255,0.95)'; // Kembali putih
+                    captureBtn.style.background = 'rgba(255,255,255,0.95)';
                     capturePhoto();
                 }
             }, 900);
@@ -221,11 +225,15 @@
 
             ctx.putImageData(imageData, 0, 0);
             currentPhotoData = canvas.toDataURL('image/jpeg', 0.92);
-            document.getElementById('captured-photo').src = currentPhotoData;
-            document.getElementById('photo-preview').style.display = 'flex';
+            
+            // Simpan otomatis
+            const link = document.createElement('a');
+            link.download = `bw-photo-${Date.now()}.jpg`;
+            link.href = currentPhotoData;
+            link.click();
         }
 
-        // === Audio Play/Pause Counter ===
+        // Audio Events
         bgMusic.addEventListener('play', () => {
             if (!isPlaying) {
                 isPlaying = true;
@@ -240,7 +248,6 @@
             }
         });
 
-        // Fungsi Lainnya
         function closePreview() { document.getElementById('photo-preview').style.display = 'none'; }
 
         function saveAndReturn() {
@@ -258,15 +265,7 @@
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
             link.click();
-
-            setTimeout(() => {
-                const base64 = currentPhotoData.split(',')[1];
-                const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
-                const a = document.createElement('a');
-                a.href = rawbtUrl; a.style.display = 'none';
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                returnToHome();
-            }, 1500);
+            returnToHome();
         }
 
         function returnToHome() {
