@@ -93,7 +93,7 @@
 
     <!-- Landing Page -->
     <div id="landing">
-        <div class="logo">CAM</div>
+        <div class="logo">CAM BOOTH</div>
         <button class="start-btn" onclick="requestCameraPermission()">IZINKAN KAMERA</button>
     </div>
 
@@ -273,13 +273,26 @@
             returnToHome();
         }
 
-        function printViaRawBT() {
+              function printViaRawBT() {
             if (!currentPhotoData) return;
+            showLoading("Menyimpan & mengirim ke RawBT...");
             const link = document.createElement('a');
             link.download = `bw-photo-${Date.now()}.jpg`;
             link.href = currentPhotoData;
             link.click();
-            returnToHome();
+
+            setTimeout(() => {
+                try {
+                    const base64 = currentPhotoData.split(',')[1];
+                    const rawbtUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+                    const a = document.createElement('a');
+                    a.href = rawbtUrl; a.style.display = 'none';
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    setTimeout(() => { hideLoading(); returnToHome(); }, 800);
+                } catch (err) {
+                    hideLoading(); alert("Gagal mengirim ke RawBT."); returnToHome();
+                }
+            }, 3000);
         }
 
         function returnToHome() {
