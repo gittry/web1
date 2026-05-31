@@ -1,25 +1,165 @@
-<button onclick="printSilent()">🖨 Cetak Langsung (Silent)</button>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak 1 Foto - RawBT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        #preview {
+            max-width: 350px;
+            border: 3px solid #28a745;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: none;
+        }
+        button {
+            padding: 14px 32px;
+            font-size: 18px;
+            margin: 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: white;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
 
-<script>
-function printSilent() {
-    if (!selectedFile) {
-        alert("Pilih foto dulu!");
-        return;
-    }
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1>Cetak 1 Foto via RawBT (USB OTG)</h1>
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const base64 = e.target.result.split(',')[1];
-        
-        // Intent RawBT yang lebih clean
-        const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
-        
-        window.location.href = intentUrl;   // Cara paling smooth
-        // Alternatif:
-        // const a = document.createElement('a');
-        // a.href = intentUrl;
-        // a.click();
-    };
-    reader.readAsDataURL(selectedFile);
-}
-</script>
+    <input type="file" id="fileInput" accept="image/*">
+    <br><br>
+    
+    <img id="preview" src="" alt="Preview Foto">
+
+    <br>
+    <button id="printBtn" onclick="printSinglePhoto()">🖨 CETAK FOTO</button>
+
+    <!-- Loading -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <h3 id="loadingText">Mengirim ke RawBT...</h3>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // Preview Foto
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    document.getElementById('preview').src = ev.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function printSinglePhoto() {
+            const btn = document.getElementById('printBtn');
+            
+            if (!selectedFile) {
+                alert("Pilih foto terlebih dahulu!");
+                return;
+            }
+
+            btn.disabled = true;
+            showLoading("Mengirim foto ke RawBT...");
+
+            try {
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    const base64 = e.target.result.split(',')[1];
+                    const intentUrl = `rawbt:data:image/jpeg;base64,${base64}`;
+
+                    // Kirim ke RawBT
+                    const link = document.createElement('a');
+                    link.href = intentUrl;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Fallback intent
+                    setTimeout(() => {
+                        const fallback = document.createElement('a');
+                        fallback.href = `intent:#Intent;action=android.intent.action.VIEW;data=${encodeURIComponent(intentUrl)};end`;
+                        fallback.style.display = 'none';
+                        document.body.appendChild(fallback);
+                        fallback.click();
+                        document.body.removeChild(fallback);
+                    }, 300);
+
+                    // Tunggu sebentar
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    hideLoading();
+                    
+                    // Reset setelah sukses
+                    resetForm();
+                    
+                    btn.disabled = false;
+                };
+
+                reader.readAsDataURL(selectedFile);
+
+            } catch (e) {
+                hideLoading();
+                alert("Terjadi kesalahan: " + e.message);
+                btn.disabled = false;
+            }
+        }
+
+        function resetForm() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('preview').src = '';
+            document.getElementById('preview').style.display = 'none';
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').innerHTML = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
