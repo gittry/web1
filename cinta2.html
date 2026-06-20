@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Untuk Maryana Isti Pranandani - Buket Kenangan</title>
+    <title>Untuk Maryana Isti Pranandani - Bunga Terindah</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -25,11 +25,7 @@
             font-family: 'Playfair Display', serif;
             width: 100vw;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
             background: radial-gradient(circle at center, #8a131a 0%, #4a050a 100%);
             animation: fadeIn 1.5s ease-in-out;
         }
@@ -39,61 +35,62 @@
             to { opacity: 1; }
         }
 
+        /* --- STRUKTUR UTAMA --- */
         .main-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* Memastikan konten berada di tengah secara vertikal */
+            gap: 2vh; /* Jarak proporsional antar elemen */
             width: 100%;
-            height: 100vh;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 40px 20px;
             position: relative;
         }
 
-        /* Komposisi Utama Layout Bersih Tanpa Ketabrak */
+        /* --- TEKS JUDUL BARU --- */
+        .top-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(2.8rem, 8vw, 4.5rem);
+            color: var(--accent-color);
+            text-align: center;
+            text-shadow: 2px 3px 6px rgba(0,0,0,0.5);
+            animation: fadeInDown 1.5s ease-out;
+            z-index: 10;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- PEMBUNGKUS BUKET --- */
         .stage-wrapper {
             position: relative;
             width: 100%;
-            max-width: 450px;
-            height: 70vh; /* Membatasi tinggi agar tidak meluber di desktop maupun mobile */
             display: flex;
-            flex-direction: column;
-            justify-content: flex-end; /* Memastikan buket bersandar rapi di bawah */
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Ukuran Buket Diperbesar (120% dari ukuran normal di mobile) */
+        .bouquet-container {
+            position: relative;
+            width: 125%; 
+            max-width: 650px; /* Batas maksimal di desktop agar tidak pecah */
+            aspect-ratio: 1536 / 1024; /* Proporsi buket asli Anda */
+            z-index: 5;
+            display: flex;
+            justify-content: center;
             align-items: center;
         }
 
-        /* SVG Teks Melingkar Kreatif Membingkai Area Atas */
-        .text-arc-container {
-            position: absolute;
-            top: 0;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            z-index: 2;
-            pointer-events: none;
-            animation: slowRotate 20s linear infinite; /* Efek putaran romantis yang sangat lambat */
-        }
-
-        @keyframes slowRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Wadah Buket Dinamis */
-        .bouquet-container {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1536 / 1024; /* Menjaga proporsi file asli Anda */
-            z-index: 5;
-            margin-bottom: 2vh;
-        }
-
-        /* Foto Polaroid yang Diatur Proporsional Berdasarkan Ukuran Asli Anda (3:4) */
+        /* --- FOTO POLAROID --- */
         .photo-frame {
             position: absolute;
-            width: 25%; /* Mengecilkan skala agar pas masuk ke dalam pelukan buket */
-            aspect-ratio: 3 / 4; 
             background-color: #ffffff;
-            padding: 4px 4px 14px 4px;
+            padding: 4px 4px 14px 4px; /* Gaya Polaroid */
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             border-radius: 2px;
             z-index: 6;
@@ -108,35 +105,39 @@
             border-radius: 1px;
         }
 
-        /* Efek Hover Polaroid Pop-Up */
         .photo-frame:hover {
             z-index: 12 !important;
-            transform: scale(1.2) translateY(-20px) rotate(0deg) !important;
+            transform: scale(1.15) translateY(-20px) rotate(0deg) !important;
             box-shadow: 0 15px 30px rgba(0,0,0,0.7);
         }
 
-        /* Distribusi Posisi 3 Foto Bersandar di Atas Buket Depan */
+        /* Posisi Presisi 3 Foto */
         .frame-1 {
-            top: -15%;
-            left: 16%;
+            width: 25%;
+            aspect-ratio: 3 / 4; 
+            top: -12%;
+            left: 17%;
             transform: rotate(-12deg);
         }
 
         .frame-2 {
-            top: -26%;
+            width: 29%; /* Foto tengah lebih besar */
+            aspect-ratio: 3 / 4; 
+            top: -24%;
             left: 50%;
-            width: 28%; /* Tengah dibuat sedikit dominan */
             transform: translateX(-50%) rotate(2deg);
             z-index: 7;
         }
 
         .frame-3 {
-            top: -15%;
-            right: 16%;
+            width: 25%;
+            aspect-ratio: 3 / 4; 
+            top: -12%;
+            right: 17%;
             transform: rotate(12deg);
         }
 
-        /* Kertas Buket Depan sebagai Layer Penutup Utama */
+        /* --- BUKET DEPAN --- */
         .buket-depan-img {
             position: absolute;
             top: 0;
@@ -145,34 +146,35 @@
             height: 100%;
             object-fit: contain;
             z-index: 10;
-            pointer-events: none; /* Klik bisa menembus ke foto di belakangnya */
-            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.4));
+            pointer-events: none; /* Memungkinkan klik foto di baliknya */
+            filter: drop-shadow(0px 10px 25px rgba(0,0,0,0.4));
         }
 
-        /* Tombol Next Rapi Kontemporer di Bawah Buket */
+        /* --- TOMBOL NEXT --- */
         .btn-next-text {
             background: rgba(229, 182, 182, 0.15);
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
-            padding: 10px 40px;
-            border-radius: 25px;
-            font-size: 0.95rem;
+            padding: 10px 45px;
+            border-radius: 30px;
+            font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
             text-decoration: none;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             text-transform: uppercase;
             transition: all 0.3s ease;
             backdrop-filter: blur(4px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            margin-top: 10px;
+            z-index: 20;
+            margin-top: 20px;
         }
 
         .btn-next-text:hover {
             background: var(--accent-color);
             color: var(--bg-color);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(229, 182, 182, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(229, 182, 182, 0.4);
         }
 
     </style>
@@ -181,17 +183,9 @@
 
     <div class="main-container">
         
+        <h1 class="top-title">Kamu adalah bunga terindah</h1>
+        
         <div class="stage-wrapper">
-            
-            <svg viewBox="0 0 200 200" class="text-arc-container">
-                <path id="circlePath" d="M 100, 100 m -75, 0 a 75,75 0 1,1 150,0 a 75,75 0 1,1 -150,0" fill="transparent" />
-                <text>
-                    <textPath href="#circlePath" fill="rgba(229, 182, 182, 0.4)" font-family="'Dancing Script', cursive" font-size="10.5" letter-spacing="1.8">
-                        miliki hatiku selamanya • kamu adalah ketidakmungkinan yang menjadi nyata • hariku indah bersamamu •
-                    </textPath>
-                </text>
-            </svg>
-
             <div class="bouquet-container">
                 
                 <div class="photo-frame frame-1">
@@ -207,7 +201,6 @@
                 <img src="buketdepan.png" alt="Buket Bunga" class="buket-depan-img">
 
             </div>
-            
         </div>
 
         <div class="btn-next-text" onclick="window.location.href='cinta3.html'">NEXT</div>
