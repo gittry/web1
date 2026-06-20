@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untuk Maryana Isti Pranandani - Buket Cinta</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg-color: #790e15; 
+            --text-color: #ffffff;
+            --accent-color: #e5b6b6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Playfair Display', serif;
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* Container utama buket dengan rasio 1536x1024 */
+        .bouquet-wrapper {
+            position: relative;
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1536 / 1024;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        /* SVG untuk Teks Melingkar di sekitar buket */
+        .text-svg {
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            z-index: 15;
+            pointer-events: none;
+            filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.3));
+        }
+
+        .buket-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .buket-belakang {
+            z-index: 1;
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3));
+        }
+
+        .buket-depan {
+            z-index: 10;
+        }
+
+        /* Container untuk foto-foto yang diselipkan */
+        .photo-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .flower-photo {
+            position: absolute;
+            width: 26%;
+            border-radius: 6px;
+            border: 3px solid #fff; /* Efek bingkai polaroid tipis */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            transition: transform 0.4s ease;
+        }
+
+        .flower-photo:hover {
+            z-index: 20;
+            transform: scale(1.1) translateY(-10px) !important;
+        }
+
+        /* Posisi foto: bisa disesuaikan nilainya jika kurang pas dengan lengkungan buket */
+        .photo1 {
+            top: 28%;
+            left: 14%;
+            transform: rotate(-18deg);
+        }
+
+        .photo2 {
+            top: 15%;
+            left: 36%;
+            width: 28%;
+            transform: rotate(2deg);
+            z-index: 6;
+        }
+
+        .photo3 {
+            top: 25%;
+            right: 14%;
+            transform: rotate(15deg);
+        }
+
+        /* Tombol Next */
+        .btn-next-text {
+            background: rgba(229, 182, 182, 0.2);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            z-index: 20;
+            margin-top: 20px;
+        }
+
+        .btn-next-text:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            transform: scale(1.05);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        
+        <div class="bouquet-wrapper">
+            
+            <!-- Teks melengkung berbentuk arc di atas buket -->
+            <svg viewBox="0 0 200 200" class="text-svg">
+                <!-- Path A (Arc): Membuat lengkungan elips yang mengelilingi sisi atas buket -->
+                <path id="loveCurve" d="M 15 150 A 90 100 0 0 1 185 150" fill="transparent" />
+                <text>
+                    <textPath href="#loveCurve" startOffset="50%" text-anchor="middle" fill="#e5b6b6" font-family="'Dancing Script', cursive" font-size="12" letter-spacing="1">
+                        Aku cinta kamu • Aku sayang kamu • Aku cinta kamu
+                    </textPath>
+                </text>
+            </svg>
+
+            <!-- Aset buket layer bawah -->
+            <img src="buketbelakang.png" alt="Bagian Belakang Buket" class="buket-img buket-belakang">
+
+            <!-- Foto orang di dalam buket (layer tengah) -->
+            <div class="photo-container">
+                <img src="orang1.jpg" alt="Foto Kenangan 1" class="flower-photo photo1">
+                <img src="orang2.jpg" alt="Foto Kenangan 2" class="flower-photo photo2">
+                <img src="orang3.jpg" alt="Foto Kenangan 3" class="flower-photo photo3">
+            </div>
+
+            <!-- Aset buket layer atas (menutupi bagian bawah foto) -->
+            <img src="buketdepan.png" alt="Bagian Depan Buket" class="buket-img buket-depan">
+            
+        </div>
+
+        <!-- Tombol Lanjut ke halaman berikutnya -->
+        <div class="btn-next-text" onclick="window.location.href='cinta3.html'">NEXT</div>
+
+    </div>
+
+</body>
+</html>
