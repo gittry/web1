@@ -336,9 +336,8 @@
         }
 
         .btn-next-text {
-    position: absolute;
-    bottom: 10vh; /* Diubah agar lebih naik dan aman dari area navigasi hp */
-    right: 30px;
+    /* Hapus position absolute, bottom, dan right */
+    margin-top: 15px; /* Memberikan jarak sedikit dari timer */
     background: rgba(229, 182, 182, 0.2);
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
@@ -351,6 +350,7 @@
     transition: all 0.3s ease;
     z-index: 20;
 }
+
 
 
         .btn-next-text:hover {
