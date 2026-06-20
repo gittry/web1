@@ -120,12 +120,15 @@
             justify-content: space-evenly;
         }
 
+        /* Perbaikan responsivitas desktop menggunakan batasan max-height agar tidak overflow vh */
         .open-envelope-wrapper {
             position: relative;
             width: 100%;
             max-width: 500px;
+            max-height: 45vh;
             aspect-ratio: 4/3; 
-            margin-top: 20px;
+            margin: 0 auto;
+            display: block;
         }
 
         .open-envelope-bg {
@@ -142,31 +145,30 @@
             transform: translateX(-50%);
             text-align: center;
             color: #5a1c1c; 
+            width: 60%;
         }
 
         .letter-title {
             font-family: 'Dancing Script', cursive;
-            /* Ukuran font diperkecil 55% dari ukuran sebelumnya */
             font-size: clamp(0.81rem, 2.25vw, 1.35rem);
-            line-height: 1.1;
+            line-height: 1.2;
         }
 
         .letter-date {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(0.81rem, 2.25vw, 1.35rem); /* Ukuran disamakan */
-    font-weight: 700;
-    margin-top: 10px;
-    letter-spacing: 1px;
-}
-
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(0.81rem, 2.25vw, 1.35rem);
+            font-weight: 700;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
 
         .polaroid-container {
             position: absolute;
-            bottom: 10%;
-            left: 5%;
-            width: 35%;
+            bottom: 8%;
+            left: 6%;
+            width: 32%;
             background: #fff;
-            padding: 5px 5px 20px 5px; 
+            padding: 4px 4px 16px 4px; 
             box-shadow: -5px 10px 15px rgba(0,0,0,0.4);
             transform: rotate(-10deg);
             border-radius: 2px;
@@ -186,16 +188,16 @@
 
         .pin-atas {
             position: absolute;
-            top: 15%;
-            right: 20%;
-            width: 8%;
+            top: 14%;
+            right: 22%;
+            width: 7%;
             filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
         }
 
         .pin-bantal {
             position: absolute;
-            top: -15px;
-            right: -15px;
+            top: -12%;
+            right: -12%;
             width: 35%;
             filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
         }
@@ -204,7 +206,8 @@
         .timer-section {
             text-align: center;
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
         .timer-section::before {
@@ -213,9 +216,9 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 150vw;
+            width: 100%;
             max-width: 600px;
-            height: 300px;
+            height: 200px;
             background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(121,14,21,0) 65%);
             z-index: -1;
             border-radius: 50%;
@@ -223,8 +226,8 @@
 
         .timer-title {
             font-family: 'Dancing Script', cursive;
-            font-size: clamp(2rem, 4vw, 2.5rem);
-            margin-bottom: 20px;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 15px;
         }
 
         .countdown-container {
@@ -277,6 +280,7 @@
             text-decoration: none;
             letter-spacing: 1px;
             transition: all 0.3s ease;
+            z-index: 20;
         }
 
         .btn-next-text:hover {
@@ -284,16 +288,10 @@
             color: var(--bg-color);
         }
 
-        /* --- HALAMAN 3 (KOSONG UNTUK SELANJUTNYA) --- */
-        #page-3 {
-            background-color: var(--bg-color);
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- HALAMAN 1 -->
     <div id="page-1" class="page active">
         <h1>untuk Maryana Isti Pranandani</h1>
         <div class="envelope-container">
@@ -303,7 +301,6 @@
         <p class="subtitle">I got you something special.</p>
     </div>
 
-    <!-- HALAMAN 2: SURAT & TIMER -->
     <div id="page-2" class="page">
         
         <div class="open-envelope-wrapper">
@@ -353,9 +350,8 @@
         </div>
 
         <div class="btn-next-text" onclick="window.location.href='cinta2.html'">NEXT</div>
+    </div>
 
-
-    <!-- SCRIPT LOGIKA -->
     <script>
         function goToPage(targetPageId) {
             const activePage = document.querySelector('.page.active');
