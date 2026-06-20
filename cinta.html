@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Untuk Maryana Isti Pranandani</title>
     <style>
-        /* Mengambil font romantis dari Google Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital@0;1&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
         :root {
-            /* Warna merah maroon gelap menyesuaikan gambar contoh */
             --bg-color: #790e15; 
             --text-color: #ffffff;
+            --accent-color: #e5b6b6; /* Warna pink pudar untuk timer */
         }
 
         * {
@@ -24,9 +23,10 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Playfair Display', serif;
-            overflow: hidden; /* Mencegah scroll saat transisi halaman */
+            overflow: hidden; 
             width: 100vw;
             height: 100vh;
+            position: relative;
         }
 
         /* --- STRUKTUR HALAMAN & TRANSISI --- */
@@ -42,8 +42,8 @@
             align-items: center;
             opacity: 0;
             visibility: hidden;
-            /* Transisi fade yang lambat dan romantis */
             transition: opacity 1.5s ease-in-out, visibility 1.5s ease-in-out;
+            padding: 20px;
         }
 
         .page.active {
@@ -53,31 +53,24 @@
         }
 
         /* --- HALAMAN 1 (SAMPUL) --- */
-        #page-1 {
-            padding: 20px;
-            text-align: center;
-        }
-
-        h1 {
+        #page-1 h1 {
             font-family: 'Dancing Script', cursive;
-            /* Ukuran font dinamis: lebih kecil di HP, lebih besar di Desktop */
             font-size: clamp(2.5rem, 6vw, 4.5rem); 
             font-weight: 700;
             margin-bottom: 2.5rem;
             letter-spacing: 1.5px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
         .envelope-container {
             position: relative;
             width: 100%;
-            /* Batas maksimal ukuran desktop agar tidak pecah/kebesaran */
             max-width: 650px; 
             margin: 0 auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Menjaga proporsi amplop 2400 x 1690 */
             aspect-ratio: 2400 / 1690;
         }
 
@@ -85,24 +78,21 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.4)); /* Bayangan lembut di belakang amplop */
+            filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.4)); 
         }
 
         .stamp-btn {
             position: absolute;
-            /* Ukuran stempel dinamis proporsional dengan amplop */
             width: 22%; 
             max-width: 180px;
             cursor: pointer;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            /* Animasi detak jantung ringan */
             animation: heartbeat 2.5s infinite;
             filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.5));
         }
 
-        /* Efek saat stempel disentuh/ditekan */
         .stamp-btn:hover, .stamp-btn:active {
             animation: none; 
             transform: translate(-50%, -50%) scale(1.08);
@@ -110,10 +100,10 @@
         }
 
         .subtitle {
-            font-family: 'Playfair Display', serif;
             font-size: clamp(1.2rem, 3vw, 1.8rem);
             margin-top: 2.5rem;
             letter-spacing: 0.5px;
+            text-align: center;
         }
 
         @keyframes heartbeat {
@@ -125,10 +115,180 @@
             100% { transform: translate(-50%, -50%) scale(1); }
         }
 
-        /* --- HALAMAN 2 (KOSONG) --- */
+        /* --- HALAMAN 2 (SURAT & TIMER) --- */
         #page-2 {
+            justify-content: space-evenly;
+        }
+
+        .open-envelope-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 4/3; /* Sesuaikan dengan proporsi Amplopbuka.png Anda */
+            margin-top: 20px;
+        }
+
+        .open-envelope-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3));
+        }
+
+        /* Teks di dalam surat (melayang di atas gambar amplop) */
+        .letter-content {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #5a1c1c; /* Merah kecoklatan agar terlihat seperti tinta di atas kertas */
+        }
+
+        .letter-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            line-height: 1.1;
+        }
+
+        .letter-date {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(0.8rem, 2vw, 1.2rem);
+            font-weight: 700;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* Elemen Foto Polaroid */
+        .polaroid-container {
+            position: absolute;
+            bottom: 10%;
+            left: 5%;
+            width: 35%;
+            background: #fff;
+            padding: 5px 5px 20px 5px; /* Efek frame polaroid */
+            box-shadow: -5px 10px 15px rgba(0,0,0,0.4);
+            transform: rotate(-10deg);
+            border-radius: 2px;
+            transition: transform 0.5s ease;
+        }
+
+        .polaroid-container:hover {
+            transform: rotate(-5deg) scale(1.05);
+            z-index: 5;
+        }
+
+        .foto-orang {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Elemen Pin */
+        .pin-atas {
+            position: absolute;
+            top: 15%;
+            right: 20%;
+            width: 8%;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+        }
+
+        .pin-bantal {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 35%;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+        }
+
+        /* Bagian Timer */
+        .timer-section {
+            text-align: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        /* Efek cahaya hati samar di belakang timer */
+        .timer-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150vw;
+            max-width: 600px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(121,14,21,0) 65%);
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .timer-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            margin-bottom: 20px;
+        }
+
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: clamp(10px, 2vw, 20px);
+            font-family: 'Playfair Display', serif;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-number {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .time-label {
+            font-size: clamp(0.5rem, 1.5vw, 0.8rem);
+            letter-spacing: 2px;
+            margin-top: 5px;
+            color: var(--accent-color);
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        .colon {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            color: var(--accent-color);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* Tombol Next */
+        .btn-next-text {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(229, 182, 182, 0.2);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next-text:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        /* --- HALAMAN 3 (KOSONG UNTUK SELANJUTNYA) --- */
+        #page-3 {
             background-color: var(--bg-color);
-            /* Anda bisa mengatur style khusus untuk halaman 2 di sini nanti */
         }
 
     </style>
@@ -137,34 +297,106 @@
 
     <div id="page-1" class="page active">
         <h1>untuk Maryana Isti Pranandani</h1>
-        
         <div class="envelope-container">
             <img src="amplop.png" alt="Amplop Surat" class="envelope-bg">
             <img src="stempel.png" alt="Buka Surat" class="stamp-btn" onclick="goToPage('page-2')">
         </div>
-
         <p class="subtitle">I got you something special.</p>
     </div>
 
     <div id="page-2" class="page">
+        
+        <div class="open-envelope-wrapper">
+            <img src="Amplopbuka.png" alt="Amplop Terbuka" class="open-envelope-bg">
+            
+            <div class="letter-content">
+                <div class="letter-title">Aku mencintaimu<br>sejak</div>
+                <div class="letter-date">13 JUNI 2026</div>
+            </div>
+
+            <img src="pin.png" alt="Pin" class="pin-atas">
+
+            <div class="polaroid-container">
+                <img src="fotoorang.jpg" alt="Foto Kenangan" class="foto-orang">
+                <img src="pinbantal.png" alt="Pin Bantal" class="pin-bantal">
+            </div>
+        </div>
+
+        <div class="timer-section">
+            <div class="timer-title">Kita telah bersama selama</div>
+            <div class="countdown-container">
+                <div class="time-box">
+                    <span class="time-number" id="t-years">00</span>
+                    <span class="time-label">Tahun</span>
+                </div>
+                <span class="colon">:</span>
+                <div class="time-box">
+                    <span class="time-number" id="t-days">00</span>
+                    <span class="time-label">Hari</span>
+                </div>
+                <span class="colon">:</span>
+                <div class="time-box">
+                    <span class="time-number" id="t-hours">00</span>
+                    <span class="time-label">Jam</span>
+                </div>
+                <span class="colon">:</span>
+                <div class="time-box">
+                    <span class="time-number" id="t-minutes">00</span>
+                    <span class="time-label">Menit</span>
+                </div>
+                <span class="colon">:</span>
+                <div class="time-box">
+                    <span class="time-number" id="t-seconds">00</span>
+                    <span class="time-label">Detik</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-next-text" onclick="goToPage('page-3')">NEXT</div>
+    </div>
+
+    <div id="page-3" class="page">
         </div>
 
     <script>
+        // Transisi Halaman
         function goToPage(targetPageId) {
-            // 1. Ambil halaman yang sedang aktif
             const activePage = document.querySelector('.page.active');
+            if(activePage) activePage.classList.remove('active');
             
-            // 2. Hilangkan class 'active' agar efek fade-out berjalan
-            if(activePage) {
-                activePage.classList.remove('active');
-            }
-
-            // 3. Setelah delay transisi, munculkan halaman target dengan fade-in
             setTimeout(() => {
                 document.getElementById(targetPageId).classList.add('active');
-            }, 800); // Delay 800ms memberikan kesan transisi perlahan dan tidak buru-buru
+            }, 800);
         }
-    </script>
 
+        // Logika Timer Count-up (Maju dari 13 Juni 2026)
+        const startDate = new Date("2026-06-13T00:00:00").getTime();
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            let distance = now - startDate;
+
+            // Jika tanggal saat ini belum mencapai 13 Juni 2026, set ke 0
+            if (distance < 0) distance = 0;
+
+            const daysTotal = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const years = Math.floor(daysTotal / 365);
+            const days = daysTotal % 365;
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Menambahkan angka 0 di depan jika di bawah 10
+            document.getElementById("t-years").innerText = years.toString().padStart(2, '0');
+            document.getElementById("t-days").innerText = days.toString().padStart(2, '0');
+            document.getElementById("t-hours").innerText = hours.toString().padStart(2, '0');
+            document.getElementById("t-minutes").innerText = minutes.toString().padStart(2, '0');
+            document.getElementById("t-seconds").innerText = seconds.toString().padStart(2, '0');
+        }
+
+        // Jalankan timer setiap 1 detik
+        setInterval(updateTimer, 1000);
+        updateTimer(); // Panggil sekali di awal agar tidak delay
+    </script>
 </body>
 </html>
