@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mencintaimu</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:wght@700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #59080E;
+            color: #f5e6d3;
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Background Slideshow */
+        #slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.8s ease-in-out;
+            filter: brightness(0.65) contrast(1.1);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(89, 8, 14, 0.4), rgba(89, 8, 14, 0.9));
+            z-index: 2;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Modern Vinyl Player */
+        .player {
+            position: relative;
+            width: 340px;
+            height: 340px;
+            margin: 30px auto;
+        }
+
+        #vinyl {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: url('piringan.png') center/cover no-repeat;
+            box-shadow: 
+                0 0 50px rgba(0, 0, 0, 0.9),
+                inset 0 0 80px rgba(255,255,255,0.15),
+                0 20px 40px rgba(0,0,0,0.6);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .playing #vinyl {
+            animation: spin 3.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .needle {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+            width: 130px;
+            height: 18px;
+            background: linear-gradient(#e0d0b0, #444);
+            transform-origin: right center;
+            border-radius: 10px 2px 2px 10px;
+            box-shadow: 8px 8px 15px rgba(0,0,0,0.7);
+            z-index: 5;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin: 15px 0 10px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(245, 217, 176, 0.3);
+            color: #f5d9b0;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(245, 217, 176, 0.25);
+            transform: scale(1.08);
+            border-color: #f5d9b0;
+        }
+
+        #progress-container {
+            width: 420px;
+            height: 5px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 9999px;
+            cursor: pointer;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #f5d9b0, #ffcc66);
+            border-radius: 9999px;
+            box-shadow: 0 0 12px #f5d9b0;
+            transition: width 0.08s linear;
+        }
+
+        .time {
+            display: flex;
+            justify-content: space-between;
+            width: 420px;
+            font-size: 0.85rem;
+            opacity: 0.75;
+            letter-spacing: 0.5px;
+        }
+
+        /* Modern Lyrics */
+        #lyrics {
+            max-width: 680px;
+            min-height: 160px;
+            text-align: center;
+            font-size: 1.28rem;
+            line-height: 1.65;
+            margin: 40px auto 0;
+            padding: 28px 40px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 20px;
+            border: 1px solid rgba(245, 217, 176, 0.15);
+            backdrop-filter: blur(12px);
+        }
+
+        .lyric-line {
+            opacity: 0.65;
+            transition: all 0.5s ease;
+            margin: 10px 0;
+        }
+
+        .lyric-line.active {
+            opacity: 1;
+            color: #ffe8c4;
+            text-shadow: 0 0 20px rgba(245, 217, 176, 0.7);
+            transform: scale(1.04);
+        }
+
+        /* Floating hearts */
+        .heart {
+            position: absolute;
+            font-size: 2rem;
+            color: #ff4d6d;
+            opacity: 0.75;
+            pointer-events: none;
+            z-index: 5;
+            animation: floatHeart 9s linear forwards;
+            text-shadow: 0 0 10px #ff3366;
+        }
+
+        @keyframes floatHeart {
+            0% { transform: translateY(110vh) scale(0.6) rotate(-15deg); }
+            100% { transform: translateY(-120px) scale(1.3) rotate(15deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="slideshow"></div>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="player" id="player">
+            <div id="vinyl"></div>
+            <div class="needle"></div>
+        </div>
+
+        <div class="controls">
+            <button id="playPause">▶</button>
+        </div>
+
+        <div id="progress-container">
+            <div id="progress"></div>
+        </div>
+        <div class="time">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+
+        <div id="lyrics"></div>
+    </div>
+
+    <audio id="audio" src="puisi.mp3"></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+        const playPauseBtn = document.getElementById('playPause');
+        const vinyl = document.getElementById('vinyl');
+        const player = document.getElementById('player');
+        const progress = document.getElementById('progress');
+        const progressContainer = document.getElementById('progress-container');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const lyricsDiv = document.getElementById('lyrics');
+        const slideshow = document.getElementById('slideshow');
+
+        // Lyrics
+        const lyrics = [
+            { time: 1, text: "Aku memilih mencintaimu." },
+            { time: 4, text: "Maka itu artinya, aku tuh siap untuk mencintai seluruhmu." },
+            { time: 8, text: "Iya, seluruhmu. Kekuranganmu, ketidakmampuanmu," },
+            { time: 11.5, text: "dan segala sesuatu dalam dirimu tanpa memintamu untuk jadi seperti apa yang aku mau." },
+            { time: 16.5, text: "Kamu enggak perlu takut untuk menjadi dirimu sendiri." },
+            { time: 20, text: "Sebab, aku menerimamu apa adanya." },
+            { time: 23.5, text: "Sebab itu, kamu enggak perlu takut." },
+            { time: 27, text: "Karena enggak ada satu orang pun yang bisa menggantikan tempatmu." },
+            { time: 32, text: "Dalam dirimu, aku melihat keindahan." },
+            { time: 35, text: "Aku menyaksikan betapa istimewanya ciptaan Tuhan dalam wujud kamu." },
+            { time: 41, text: "Mungkin aku memang enggak kayak masa lalumu," },
+            { time: 44, text: "pun kamu juga tidak seperti masa laluku." },
+            { time: 48, text: "Tapi Tuhan tuh mempertemukan kita dengan sebuah alasan, bukan?" },
+            { time: 52.5, text: "Kamu dengan kesederhanaanmu berhasil menggetarkan perasaanku." },
+            { time: 57, text: "Aku ingin menemanimu, sepanjang hidupku." },
+            { time: 61, text: "Mulai dari matahari terbit sampai matahari tenggelam." },
+            { time: 65, text: "Mulai dari cerita-cerita yang menyenangkan sampai cerita-cerita yang menyedihkan." },
+            { time: 70.5, text: "Mulai dari kaki kita yang masih kuat melangkah hingga nanti hanya tertatih." },
+            { time: 75.5, text: "Mulai dari rambut kita hitam hingga memutih dan berantakan." },
+            { time: 80.5, text: "Mulai saat ini..." },
+            { time: 83, text: "aku enggak punya alasan untuk berhenti mencintaimu." }
+        ];
+
+        // Slideshow images
+        const images = Array.from({length: 10}, (_, i) => `orang${i+1}.jpg`);
+        let currentImage = 0;
+
+        function changeBackground() {
+            slideshow.style.backgroundImage = `url('${images[currentImage]}')`;
+            currentImage = (currentImage + 1) % images.length;
+        }
+
+        function startSlideshow() {
+            changeBackground();
+            setInterval(changeBackground, 4800);
+        }
+
+        // Floating hearts
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.textContent = Math.random() > 0.5 ? '❤️' : '💞';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 7 + 8) + 's';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 16000);
+        }
+
+        // Lyrics update
+        function updateLyrics(currentTime) {
+            let activeText = "";
+            for (let i = lyrics.length - 1; i >= 0; i--) {
+                if (currentTime >= lyrics[i].time) {
+                    activeText = lyrics[i].text;
+                    break;
+                }
+            }
+
+            lyricsDiv.innerHTML = lyrics.map(line => {
+                const isActive = line.text === activeText;
+                return `<div class="lyric-line \( {isActive ? 'active' : ''}"> \){line.text}</div>`;
+            }).join('');
+        }
+
+        function formatTime(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `\( {min}: \){sec < 10 ? '0' : ''}${sec}`;
+        }
+
+        function updateProgress() {
+            if (!audio.duration) return;
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progress.style.width = percent + '%';
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        }
+
+        // Controls
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                player.classList.add('playing');
+                playPauseBtn.textContent = '⏸';
+            } else {
+                audio.pause();
+                player.classList.remove('playing');
+                playPauseBtn.textContent = '▶';
+            }
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pos * audio.duration;
+        });
+
+        // Audio events
+        audio.addEventListener('timeupdate', () => {
+            updateProgress();
+            updateLyrics(audio.currentTime);
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+            player.classList.remove('playing');
+            playPauseBtn.textContent = '▶';
+        });
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                playPauseBtn.click();
+            }
+        });
+
+        // Init
+        window.onload = () => {
+            startSlideshow();
+            setInterval(createHeart, 700);
+            
+            setTimeout(() => {
+                audio.play().catch(() => {});
+            }, 1200);
+        };
+    </script>
+</body>
+</html>
