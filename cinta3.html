@@ -365,29 +365,33 @@
             }
         });
 
-        // 4. DATA TIMING SUBTITLE PRESISI (Format Detik)
-        const subtitles = [
-            { start: 1.0, end: 4.0, text: "Aku memilih mencintaimu." },
-            { start: 4.0, end: 8.0, text: "Maka itu artinya, aku tuh siap untuk mencintai seluruhmu." },
-            { start: 8.0, end: 11.5, text: "Iya, seluruhmu. Kekuranganmu, ketidakmampuanmu," },
-            { start: 11.5, end: 16.0, text: "dan segala sesuatu dalam dirimu tanpa memintamu untuk jadi seperti apa yang aku mau." },
-            { start: 16.5, end: 20.0, text: "Kamu enggak perlu takut untuk menjadi dirimu sendiri." },
-            { start: 20.0, end: 23.0, text: "Sebab, aku menerimamu apa adanya." },
-            { start: 23.5, end: 27.0, text: "Sebab itu, kamu enggak perlu takut." },
-            { start: 27.0, end: 31.5, text: "Karena enggak ada satu orang pun yang bisa menggantikan tempatmu." },
-            { start: 32.0, end: 35.0, text: "Dalam dirimu, aku melihat keindahan." },
-            { start: 35.0, end: 40.5, text: "Aku menyaksikan betapa istimewanya ciptaan Tuhan dalam wujud kamu." },
-            { start: 41.0, end: 44.0, text: "Mungkin aku memang enggak kayak masa lalumu," },
-            { start: 44.0, end: 47.5, text: "pun kamu juga tidak seperti masa laluku." },
-            { start: 48.0, end: 52.0, text: "Tapi Tuhan tuh mempertemukan kita dengan sebuah alasan, bukan?" },
-            { start: 52.5, end: 56.5, text: "Kamu dengan kesederhanaanmu berhasil menggetarkan perasaanku." },
-            { start: 57.0, end: 60.5, text: "Aku ingin menemanimu, sepanjang hidupku." },
-            { start: 61.0, end: 64.5, text: "Mulai dari matahari terbit sampai matahari tenggelam." },
-            { start: 65.0, end: 70.0, text: "Mulai dari cerita-cerita yang menyenangkan sampai cerita-cerita yang menyedihkan." },
-            { start: 70.5, end: 75.0, text: "Mulai dari kaki kita yang masih kuat melangkah hingga nanti hanya tertatih." },
-            { start: 75.5, end: 80.0, text: "Mulai dari rambut kita hitam hingga memutih dan berantakan." },
-            { start: 80.5, end: 82.5, text: "Mulai saat ini..." },
-            { start: 83.0, end: 87.0, text: "aku enggak punya alasan untuk berhenti mencintaimu." }
+        // DATA TIMING SUBTITLE PRESISI (Format Detik)
+const subtitles = [
+    { start: 1.0, end: 4.0, text: "Aku memilih mencintaimu." },
+    { start: 4.0, end: 8.0, text: "Maka itu artinya, aku tuh siap untuk mencintai seluruhmu." },
+
+    // bagian 8.0 - 11.5 dihapus, lalu semua timing setelahnya disesuaikan
+    { start: 8.0, end: 12.5, text: "dan segala sesuatu dalam dirimu tanpa memintamu untuk jadi seperti apa yang aku mau." },
+    { start: 13.0, end: 16.5, text: "Kamu enggak perlu takut untuk menjadi dirimu sendiri." },
+    { start: 16.5, end: 19.5, text: "Sebab, aku menerimamu apa adanya." },
+    { start: 20.0, end: 23.5, text: "Sebab itu, kamu enggak perlu takut." },
+    { start: 23.5, end: 28.0, text: "Karena enggak ada satu orang pun yang bisa menggantikan tempatmu." },
+    { start: 28.5, end: 31.5, text: "Dalam dirimu, aku melihat keindahan." },
+    { start: 31.5, end: 37.0, text: "Aku menyaksikan betapa istimewanya ciptaan Tuhan dalam wujud kamu." },
+    { start: 37.5, end: 40.5, text: "Mungkin aku memang enggak kayak masa lalumu," },
+    { start: 40.5, end: 44.0, text: "pun kamu juga tidak seperti masa laluku." },
+    { start: 44.5, end: 48.5, text: "Tapi Tuhan tuh mempertemukan kita dengan sebuah alasan, bukan?" },
+    { start: 49.0, end: 53.0, text: "Kamu dengan kesederhanaanmu berhasil menggetarkan perasaanku." },
+    { start: 53.5, end: 57.0, text: "Aku ingin menemanimu, sepanjang hidupku." },
+    { start: 57.5, end: 61.0, text: "Mulai dari matahari terbit sampai matahari tenggelam." },
+    { start: 61.5, end: 66.5, text: "Mulai dari cerita-cerita yang menyenangkan sampai cerita-cerita yang menyedihkan." },
+    { start: 67.0, end: 71.5, text: "Mulai dari kaki kita yang masih kuat melangkah hingga nanti hanya tertatih." },
+    { start: 72.0, end: 76.5, text: "Mulai dari rambut kita hitam hingga memutih dan berantakan." },
+    { start: 77.0, end: 79.0, text: "Mulai saat ini..." },
+
+    // bagian akhir diubah jadi 93 - 102
+    { start: 93.0, end: 102.0, text: "aku enggak punya alasan untuk berhenti mencintaimu." }
+];
         ];
 
         // 5. ENGINE SINKRONISASI SUBTITLE (Menggunakan requestAnimationFrame untuk kelancaran maksimum)
