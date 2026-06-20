@@ -1,3 +1,11 @@
+Ini adalah versi terbaik dan paling sempurna untuk **cinta3.html**.
+Saya telah memadukan semua permintaan Anda:
+ 1. **Subtitle Sangat Presisi:** Menggunakan perhitungan milidetik (*timestamp* asli Anda) yang disinkronkan langsung dengan pergerakan lagu.
+ 2. **Posisi Subtitle Sinematik:** Lirik diletakkan **di dalam** bingkai *slideshow* bagian bawah, dengan ukuran kecil namun tetap sangat jelas terbaca berkat efek *gradient shadow* tipis di belakang teks (seperti gaya subtitle film layar lebar).
+ 3. **Piringan Hitam & Tombol Presisi:** Tombol Play berada persis di titik tengah poros piringan dan piringan akan berputar mengelilinginya saat lagu dimainkan.
+ 4. **Anti-Sleep Mode:** Layar tidak akan mati selama lagu berputar.
+Silakan salin seluruh kode ini:
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -101,12 +109,12 @@
             object-fit: cover;
             opacity: 0;
             transition: opacity 3s ease-in-out;
-            filter: brightness(0.2) blur(8px); /* Sangat gelap dan blur agar antarmuka utama bersinar */
+            filter: brightness(0.25) blur(8px); 
         }
 
         .slide-bg.active { opacity: 1; }
 
-        /* --- MAIN INTERFACE CONTROLLER --- */
+        /* --- MAIN INTERFACE --- */
         .main-player-container {
             position: relative;
             z-index: 10;
@@ -117,21 +125,20 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            gap: 40px; /* Jarak estetik antara slideshow dan piringan */
+            gap: 35px;
         }
 
-        /* --- FOREGROUND ROMANTIC SLIDESHOW --- */
+        /* --- FOREGROUND SLIDESHOW WITH SUBTITLES --- */
         .fg-slideshow-wrapper {
             position: relative;
             width: 85vw;
             max-width: 320px;
-            height: 42vh; /* Ketinggian dikunci agar bingkai rapi */
+            height: 45vh; 
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
             border: 2px solid rgba(229, 182, 182, 0.4);
             background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
             z-index: 15;
         }
 
@@ -141,22 +148,56 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Menjamin gambar penuh rapi terlepas dari rasio ukurannya */
+            object-fit: cover;
             opacity: 0;
-            transform: scale(1.1); /* Efek awal membesar */
-            transition: opacity 2s ease, transform 4s ease-out; /* Transisi romantis lambat */
+            transform: scale(1.1);
+            transition: opacity 2s ease, transform 4.5s ease-out; 
         }
 
         .fg-slide.active {
             opacity: 1;
-            transform: scale(1); /* Teksurnya kembali ke ukuran normal dengan anggun */
+            transform: scale(1);
+        }
+
+        /* --- SISTEM SUBTITLE DI DALAM SLIDESHOW --- */
+        .subtitle-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 40px 15px 15px 15px; /* Padding atas lebih besar untuk gradien */
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            min-height: 80px;
+        }
+
+        .subtitle-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: clamp(0.85rem, 3.5vw, 1.1rem); /* Ukuran kecil yang rapi */
+            color: #ffffff;
+            text-align: center;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9); /* Bayangan kuat agar selalu terbaca */
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .subtitle-text.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* --- VINYL PLAYER SECTION --- */
         .vinyl-wrapper {
             position: relative;
-            width: 65vw;
-            max-width: 260px;
+            width: 60vw;
+            max-width: 240px;
             aspect-ratio: 1 / 1; 
             border-radius: 50%;
             box-shadow: 0 15px 35px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.05);
@@ -170,7 +211,7 @@
             height: 100%;
             object-fit: contain;
             animation: rotateVinyl 12s linear infinite;
-            animation-play-state: paused; /* Berhenti jika lagu di pause */
+            animation-play-state: paused; 
             border-radius: 50%;
         }
 
@@ -185,12 +226,12 @@
 
         /* --- CENTER PLAY BUTTON (Tengah Piringan) --- */
         .play-btn {
-            position: absolute; /* Mengunci tepat di tengah vinyl */
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 20; /* Harus di atas gambar piringan */
-            background: rgba(229, 182, 182, 0.3);
+            z-index: 25; 
+            background: rgba(229, 182, 182, 0.35);
             border: 2px solid var(--accent-color);
             color: var(--text-color);
             width: 60px;
@@ -208,8 +249,7 @@
         .play-btn:hover {
             background: var(--accent-color);
             color: var(--bg-color);
-            width: 65px;
-            height: 65px;
+            transform: translate(-50%, -50%) scale(1.1); /* Efek membesar di tengah */
             box-shadow: 0 8px 30px rgba(229,182,182,0.6);
         }
 
@@ -224,14 +264,12 @@
 </head>
 <body>
 
-    <!-- LOADER SCREEN -->
     <div id="loader">
         <div class="heart-pulser"></div>
         <div class="loader-text">Menyinkronkan Rasa...</div>
     </div>
 
-    <!-- BACKGROUND SLIDESHOW (Efek Blur Gelap) -->
-    <div class="slideshow-bg" id="bg-slideshow">
+    <div class="slideshow-bg">
         <img src="orang1.jpg" class="slide-bg active">
         <img src="orang2.jpg" class="slide-bg">
         <img src="orang3.jpg" class="slide-bg">
@@ -244,11 +282,9 @@
         <img src="orang10.jpg" class="slide-bg">
     </div>
 
-    <!-- MAIN INTERFACE -->
     <div class="main-player-container">
         
-        <!-- SLIDESHOW DEPAN (Bingkai Estetik) -->
-        <div class="fg-slideshow-wrapper" id="fg-slideshow">
+        <div class="fg-slideshow-wrapper">
             <img src="orang1.jpg" class="fg-slide active">
             <img src="orang2.jpg" class="fg-slide">
             <img src="orang3.jpg" class="fg-slide">
@@ -259,37 +295,34 @@
             <img src="orang8.jpg" class="fg-slide">
             <img src="orang9.jpg" class="fg-slide">
             <img src="orang10.jpg" class="fg-slide">
+
+            <div class="subtitle-overlay">
+                <div class="subtitle-text" id="subtitle-render"></div>
+            </div>
         </div>
 
-        <!-- PIRINGAN HITAM & TOMBOL PLAY (Di Bawah Slideshow) -->
         <div class="vinyl-wrapper" id="vinyl-container">
-            <!-- Gambar Vinyl berputar -->
             <img src="piringan.png" alt="Piringan Hitam" class="vinyl-img">
             
-            <!-- Tombol Play terpusat presisi di titik tengah (Pusat Vinyl) -->
             <button class="play-btn" id="master-play-btn" aria-label="Mainkan Musik">
-                <!-- Icon Play (Awal) -->
                 <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <!-- Icon Pause (Tersembunyi) -->
                 <svg id="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
         </div>
 
     </div>
 
-    <!-- ELEMEN AUDIO INTERNAL -->
     <audio id="audio-poem" src="puisi.mp3" preload="auto"></audio>
 
     <script>
-        // DOM Elements
         const loader = document.getElementById('loader');
         const audio = document.getElementById('audio-poem');
         const playBtn = document.getElementById('master-play-btn');
         const playIcon = document.getElementById('play-icon');
         const pauseIcon = document.getElementById('pause-icon');
         const vinylContainer = document.getElementById('vinyl-container');
+        const subtitleRender = document.getElementById('subtitle-render');
         
-        // Slideshow Elements
         const bgSlides = document.querySelectorAll('.slide-bg');
         const fgSlides = document.querySelectorAll('.fg-slide');
 
@@ -303,32 +336,27 @@
             }, 1500);
         });
 
-        // 2. Logic Dual Slideshow (Background & Foreground)
+        // 2. Logic Dual Slideshow
         let currentSlideIndex = 0;
         function startSlideshow() {
             setInterval(() => {
-                // Hapus kelas active dari slide saat ini
                 bgSlides[currentSlideIndex].classList.remove('active');
                 fgSlides[currentSlideIndex].classList.remove('active');
                 
-                // Maju ke indeks gambar selanjutnya
                 currentSlideIndex = (currentSlideIndex + 1) % bgSlides.length;
                 
-                // Tambahkan kelas active ke gambar selanjutnya
                 bgSlides[currentSlideIndex].classList.add('active');
                 fgSlides[currentSlideIndex].classList.add('active');
-            }, 4500); // Pergantian dilakukan setiap 4.5 detik untuk efek transisi perlahan
+            }, 4500); 
         }
         startSlideshow();
 
-        // 3. WAKE LOCK API (Mencegah Layar Mode Sleep)
+        // 3. WAKE LOCK API (Anti-Sleep)
         async function activateWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
                     wakeLockToken = await navigator.wakeLock.request('screen');
-                } catch (err) {
-                    console.warn(`Gagal mengaktifkan Wake Lock: ${err.message}`);
-                }
+                } catch (err) {}
             }
         }
 
@@ -339,43 +367,92 @@
             }
         }
 
-        // Restart Wake Lock saat membuka kembali tab browser
         document.addEventListener('visibilitychange', async () => {
             if (wakeLockToken !== null && document.visibilityState === 'visible') {
                 await activateWakeLock();
             }
         });
 
-        // 4. CONTROLS INTERACTION LOGIC
+        // 4. DATA TIMING SUBTITLE PRESISI (Format Detik)
+        const subtitles = [
+            { start: 1.0, end: 4.0, text: "Aku memilih mencintaimu." },
+            { start: 4.0, end: 8.0, text: "Maka itu artinya, aku tuh siap untuk mencintai seluruhmu." },
+            { start: 8.0, end: 11.5, text: "Iya, seluruhmu. Kekuranganmu, ketidakmampuanmu," },
+            { start: 11.5, end: 16.0, text: "dan segala sesuatu dalam dirimu tanpa memintamu untuk jadi seperti apa yang aku mau." },
+            { start: 16.5, end: 20.0, text: "Kamu enggak perlu takut untuk menjadi dirimu sendiri." },
+            { start: 20.0, end: 23.0, text: "Sebab, aku menerimamu apa adanya." },
+            { start: 23.5, end: 27.0, text: "Sebab itu, kamu enggak perlu takut." },
+            { start: 27.0, end: 31.5, text: "Karena enggak ada satu orang pun yang bisa menggantikan tempatmu." },
+            { start: 32.0, end: 35.0, text: "Dalam dirimu, aku melihat keindahan." },
+            { start: 35.0, end: 40.5, text: "Aku menyaksikan betapa istimewanya ciptaan Tuhan dalam wujud kamu." },
+            { start: 41.0, end: 44.0, text: "Mungkin aku memang enggak kayak masa lalumu," },
+            { start: 44.0, end: 47.5, text: "pun kamu juga tidak seperti masa laluku." },
+            { start: 48.0, end: 52.0, text: "Tapi Tuhan tuh mempertemukan kita dengan sebuah alasan, bukan?" },
+            { start: 52.5, end: 56.5, text: "Kamu dengan kesederhanaanmu berhasil menggetarkan perasaanku." },
+            { start: 57.0, end: 60.5, text: "Aku ingin menemanimu, sepanjang hidupku." },
+            { start: 61.0, end: 64.5, text: "Mulai dari matahari terbit sampai matahari tenggelam." },
+            { start: 65.0, end: 70.0, text: "Mulai dari cerita-cerita yang menyenangkan sampai cerita-cerita yang menyedihkan." },
+            { start: 70.5, end: 75.0, text: "Mulai dari kaki kita yang masih kuat melangkah hingga nanti hanya tertatih." },
+            { start: 75.5, end: 80.0, text: "Mulai dari rambut kita hitam hingga memutih dan berantakan." },
+            { start: 80.5, end: 82.5, text: "Mulai saat ini..." },
+            { start: 83.0, end: 87.0, text: "aku enggak punya alasan untuk berhenti mencintaimu." }
+        ];
+
+        // 5. ENGINE SINKRONISASI SUBTITLE (Menggunakan requestAnimationFrame untuk kelancaran maksimum)
+        let lastSubtitle = "";
+        
+        function checkSubtitles() {
+            if(!audio.paused) {
+                const currentTime = audio.currentTime;
+                const activeSub = subtitles.find(sub => currentTime >= sub.start && currentTime <= sub.end);
+
+                if (activeSub) {
+                    if (lastSubtitle !== activeSub.text) {
+                        lastSubtitle = activeSub.text;
+                        subtitleRender.classList.remove('show');
+                        setTimeout(() => {
+                            subtitleRender.innerText = activeSub.text;
+                            subtitleRender.classList.add('show');
+                        }, 200); // Jeda halus transisi ganti teks
+                    }
+                } else {
+                    if (subtitleRender.classList.contains('show')) {
+                        subtitleRender.classList.remove('show');
+                        lastSubtitle = "";
+                    }
+                }
+            }
+            requestAnimationFrame(checkSubtitles);
+        }
+
+        // 6. KONTROL AUDIO & ANIMASI
         playBtn.addEventListener('click', async () => {
             if (audio.paused) {
-                // Memutar lagu & Menjalankan animasi rotasi vinyl
                 audio.play();
                 playIcon.style.display = 'none';
                 pauseIcon.style.display = 'block';
                 vinylContainer.classList.add('playing');
                 
-                // Mengaktifkan fitur agar layar terus menyala
                 await activateWakeLock();
+                requestAnimationFrame(checkSubtitles); // Mulai pemantauan lirik
             } else {
-                // Menjeda lagu & rotasi vinyl
                 audio.pause();
                 playIcon.style.display = 'block';
                 pauseIcon.style.display = 'none';
                 vinylContainer.classList.remove('playing');
-                
-                // Menonaktifkan wake lock jika lagu dijeda
                 releaseWakeLock();
             }
         });
 
-        // Event saat lagu telah selesai
         audio.addEventListener('ended', () => {
             playIcon.style.display = 'block';
             pauseIcon.style.display = 'none';
             vinylContainer.classList.remove('playing');
+            subtitleRender.classList.remove('show');
             releaseWakeLock();
         });
     </script>
 </body>
 </html>
+
+```
