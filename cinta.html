@@ -10,7 +10,7 @@
         :root {
             --bg-color: #790e15; 
             --text-color: #ffffff;
-            --accent-color: #e5b6b6; /* Warna pink pudar untuk timer */
+            --accent-color: #e5b6b6;
         }
 
         * {
@@ -124,7 +124,7 @@
             position: relative;
             width: 100%;
             max-width: 500px;
-            aspect-ratio: 4/3; /* Sesuaikan dengan proporsi Amplopbuka.png Anda */
+            aspect-ratio: 4/3; 
             margin-top: 20px;
         }
 
@@ -135,19 +135,19 @@
             filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3));
         }
 
-        /* Teks di dalam surat (melayang di atas gambar amplop) */
         .letter-content {
             position: absolute;
             top: 25%;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            color: #5a1c1c; /* Merah kecoklatan agar terlihat seperti tinta di atas kertas */
+            color: #5a1c1c; 
         }
 
         .letter-title {
             font-family: 'Dancing Script', cursive;
-            font-size: clamp(1.8rem, 5vw, 3rem);
+            /* Ukuran font diperkecil 55% dari ukuran sebelumnya */
+            font-size: clamp(0.81rem, 2.25vw, 1.35rem);
             line-height: 1.1;
         }
 
@@ -159,14 +159,13 @@
             letter-spacing: 1px;
         }
 
-        /* Elemen Foto Polaroid */
         .polaroid-container {
             position: absolute;
             bottom: 10%;
             left: 5%;
             width: 35%;
             background: #fff;
-            padding: 5px 5px 20px 5px; /* Efek frame polaroid */
+            padding: 5px 5px 20px 5px; 
             box-shadow: -5px 10px 15px rgba(0,0,0,0.4);
             transform: rotate(-10deg);
             border-radius: 2px;
@@ -184,7 +183,6 @@
             display: block;
         }
 
-        /* Elemen Pin */
         .pin-atas {
             position: absolute;
             top: 15%;
@@ -208,7 +206,6 @@
             margin-bottom: 20px;
         }
 
-        /* Efek cahaya hati samar di belakang timer */
         .timer-section::before {
             content: '';
             position: absolute;
@@ -295,6 +292,7 @@
 </head>
 <body>
 
+    <!-- HALAMAN 1 -->
     <div id="page-1" class="page active">
         <h1>untuk Maryana Isti Pranandani</h1>
         <div class="envelope-container">
@@ -304,10 +302,11 @@
         <p class="subtitle">I got you something special.</p>
     </div>
 
+    <!-- HALAMAN 2: SURAT & TIMER -->
     <div id="page-2" class="page">
         
         <div class="open-envelope-wrapper">
-            <img src="amplopbuka.png" alt="Amplop Terbuka" class="open-envelope-bg">
+            <img src="Amplopbuka.png" alt="Amplop Terbuka" class="open-envelope-bg">
             
             <div class="letter-content">
                 <div class="letter-title">Aku mencintaimu<br>sejak</div>
@@ -355,11 +354,13 @@
         <div class="btn-next-text" onclick="goToPage('page-3')">NEXT</div>
     </div>
 
+    <!-- HALAMAN 3 -->
     <div id="page-3" class="page">
-        </div>
+        <!-- Konten Halaman 3 akan ditambahkan di sesi berikutnya -->
+    </div>
 
+    <!-- SCRIPT LOGIKA -->
     <script>
-        // Transisi Halaman
         function goToPage(targetPageId) {
             const activePage = document.querySelector('.page.active');
             if(activePage) activePage.classList.remove('active');
@@ -369,14 +370,12 @@
             }, 800);
         }
 
-        // Logika Timer Count-up (Maju dari 13 Juni 2026)
         const startDate = new Date("2026-06-13T00:00:00").getTime();
 
         function updateTimer() {
             const now = new Date().getTime();
             let distance = now - startDate;
 
-            // Jika tanggal saat ini belum mencapai 13 Juni 2026, set ke 0
             if (distance < 0) distance = 0;
 
             const daysTotal = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -386,7 +385,6 @@
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Menambahkan angka 0 di depan jika di bawah 10
             document.getElementById("t-years").innerText = years.toString().padStart(2, '0');
             document.getElementById("t-days").innerText = days.toString().padStart(2, '0');
             document.getElementById("t-hours").innerText = hours.toString().padStart(2, '0');
@@ -394,9 +392,8 @@
             document.getElementById("t-seconds").innerText = seconds.toString().padStart(2, '0');
         }
 
-        // Jalankan timer setiap 1 detik
         setInterval(updateTimer, 1000);
-        updateTimer(); // Panggil sekali di awal agar tidak delay
+        updateTimer(); 
     </script>
 </body>
 </html>
