@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Putar Puisi Cinta Kita</title>
+    <title>Melodi Kenangan Kita</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -82,7 +82,7 @@
             100% { transform: rotate(-45deg) scale(1.2); opacity: 1; }
         }
 
-        /* --- BACKGROUND SLIDESHOW --- */
+        /* --- BACKGROUND BLURRED SLIDESHOW --- */
         .slideshow-bg {
             position: absolute;
             top: 0;
@@ -92,7 +92,7 @@
             z-index: 1;
         }
 
-        .slide {
+        .slide-bg {
             position: absolute;
             top: 0;
             left: 0;
@@ -100,13 +100,11 @@
             height: 100%;
             object-fit: cover;
             opacity: 0;
-            transition: opacity 2s ease-in-out;
-            filter: brightness(0.25) blur(4px); /* Menggelapkan & menyamarkan latar belakang agar fokus ke player */
+            transition: opacity 3s ease-in-out;
+            filter: brightness(0.2) blur(8px); /* Sangat gelap dan blur agar antarmuka utama bersinar */
         }
 
-        .slide.active {
-            opacity: 1;
-        }
+        .slide-bg.active { opacity: 1; }
 
         /* --- MAIN INTERFACE CONTROLLER --- */
         .main-player-container {
@@ -119,27 +117,49 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            gap: 40px; /* Jarak estetik antara slideshow dan piringan */
         }
 
-        /* Player Wrapper */
-        .player-card {
+        /* --- FOREGROUND ROMANTIC SLIDESHOW --- */
+        .fg-slideshow-wrapper {
+            position: relative;
+            width: 85vw;
+            max-width: 320px;
+            height: 42vh; /* Ketinggian dikunci agar bingkai rapi */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            border: 2px solid rgba(229, 182, 182, 0.4);
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 15;
+        }
+
+        .fg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 25px;
+            height: 100%;
+            object-fit: cover; /* Menjamin gambar penuh rapi terlepas dari rasio ukurannya */
+            opacity: 0;
+            transform: scale(1.1); /* Efek awal membesar */
+            transition: opacity 2s ease, transform 4s ease-out; /* Transisi romantis lambat */
         }
 
-        /* Piringan Hitam Vinyl */
+        .fg-slide.active {
+            opacity: 1;
+            transform: scale(1); /* Teksurnya kembali ke ukuran normal dengan anggun */
+        }
+
+        /* --- VINYL PLAYER SECTION --- */
         .vinyl-wrapper {
             position: relative;
-            width: 75vw;
-            max-width: 280px;
-            aspect-ratio: 2398 / 2400; /* Proporsi file piringan.png Anda */
+            width: 65vw;
+            max-width: 260px;
+            aspect-ratio: 1 / 1; 
             border-radius: 50%;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.05);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.05);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -149,26 +169,13 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            animation: rotateVinyl 15s linear infinite;
-            animation-play-state: paused; /* Berputar hanya saat audio berjalan */
+            animation: rotateVinyl 12s linear infinite;
+            animation-play-state: paused; /* Berhenti jika lagu di pause */
+            border-radius: 50%;
         }
 
         .vinyl-wrapper.playing .vinyl-img {
             animation-play-state: running;
-        }
-
-        /* Center Hole decorative dot for romantic touch */
-        .vinyl-center-art {
-            position: absolute;
-            width: 15%;
-            height: 15%;
-            background-color: var(--bg-color);
-            border-radius: 50%;
-            border: 2px solid var(--accent-color);
-            z-index: 12;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         @keyframes rotateVinyl {
@@ -176,112 +183,101 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Controls (Play/Pause Button) */
-        .controls-area {
-            z-index: 15;
-        }
-
+        /* --- CENTER PLAY BUTTON (Tengah Piringan) --- */
         .play-btn {
-            background: rgba(229, 182, 182, 0.2);
+            position: absolute; /* Mengunci tepat di tengah vinyl */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20; /* Harus di atas gambar piringan */
+            background: rgba(229, 182, 182, 0.3);
             border: 2px solid var(--accent-color);
             color: var(--text-color);
-            width: 65px;
-            height: 65px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(5px);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
 
         .play-btn:hover {
-            transform: scale(1.08);
             background: var(--accent-color);
             color: var(--bg-color);
-            box-shadow: 0 8px 25px rgba(229,182,182,0.4);
+            width: 65px;
+            height: 65px;
+            box-shadow: 0 8px 30px rgba(229,182,182,0.6);
         }
 
         .play-btn svg {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             fill: currentColor;
             transition: transform 0.2s;
-        }
-
-        /* --- LYRICS DISPLAY SUBTITLE SYSTEM --- */
-        .lyrics-box {
-            width: 100%;
-            min-height: 90px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px 15px;
-        }
-
-        .lyrics-text {
-            font-family: 'Dancing Script', cursive;
-            font-size: clamp(1.5rem, 5.5vw, 2.2rem);
-            color: var(--accent-color);
-            line-height: 1.4;
-            text-shadow: 1px 2px 4px rgba(0,0,0,0.5);
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            text-align: center;
-        }
-
-        .lyrics-text.show {
-            opacity: 1;
-            transform: translateY(0);
         }
 
     </style>
 </head>
 <body>
 
+    <!-- LOADER SCREEN -->
     <div id="loader">
         <div class="heart-pulser"></div>
         <div class="loader-text">Menyinkronkan Rasa...</div>
     </div>
 
-    <div class="slideshow-bg">
-        <img src="orang1.jpg" alt="Kenangan 1" class="slide active">
-        <img src="orang2.jpg" alt="Kenangan 2" class="slide">
-        <img src="orang3.jpg" alt="Kenangan 3" class="slide">
-        <img src="orang4.jpg" alt="Kenangan 4" class="slide">
-        <img src="orang5.jpg" alt="Kenangan 5" class="slide">
-        <img src="orang6.jpg" alt="Kenangan 6" class="slide">
-        <img src="orang7.jpg" alt="Kenangan 7" class="slide">
-        <img src="orang8.jpg" alt="Kenangan 8" class="slide">
-        <img src="orang9.jpg" alt="Kenangan 9" class="slide">
-        <img src="orang10.jpg" alt="Kenangan 10" class="slide">
+    <!-- BACKGROUND SLIDESHOW (Efek Blur Gelap) -->
+    <div class="slideshow-bg" id="bg-slideshow">
+        <img src="orang1.jpg" class="slide-bg active">
+        <img src="orang2.jpg" class="slide-bg">
+        <img src="orang3.jpg" class="slide-bg">
+        <img src="orang4.jpg" class="slide-bg">
+        <img src="orang5.jpg" class="slide-bg">
+        <img src="orang6.jpg" class="slide-bg">
+        <img src="orang7.jpg" class="slide-bg">
+        <img src="orang8.jpg" class="slide-bg">
+        <img src="orang9.jpg" class="slide-bg">
+        <img src="orang10.jpg" class="slide-bg">
     </div>
 
+    <!-- MAIN INTERFACE -->
     <div class="main-player-container">
-        <div class="player-card">
-            
-            <div class="vinyl-wrapper" id="vinyl-container">
-                <img src="piringan.png" alt="Piringan Hitam" class="vinyl-img">
-                <div class="vinyl-center-art"></div>
-            </div>
-
-            <div class="controls-area">
-                <button class="play-btn" id="master-play-btn" aria-label="Mainkan Musik">
-                    <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    <svg id="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                </button>
-            </div>
-
-            <div class="lyrics-box">
-                <div class="lyrics-text" id="lyrics-render">Klik tombol di atas untuk memulai cerita...</div>
-            </div>
-
+        
+        <!-- SLIDESHOW DEPAN (Bingkai Estetik) -->
+        <div class="fg-slideshow-wrapper" id="fg-slideshow">
+            <img src="orang1.jpg" class="fg-slide active">
+            <img src="orang2.jpg" class="fg-slide">
+            <img src="orang3.jpg" class="fg-slide">
+            <img src="orang4.jpg" class="fg-slide">
+            <img src="orang5.jpg" class="fg-slide">
+            <img src="orang6.jpg" class="fg-slide">
+            <img src="orang7.jpg" class="fg-slide">
+            <img src="orang8.jpg" class="fg-slide">
+            <img src="orang9.jpg" class="fg-slide">
+            <img src="orang10.jpg" class="fg-slide">
         </div>
+
+        <!-- PIRINGAN HITAM & TOMBOL PLAY (Di Bawah Slideshow) -->
+        <div class="vinyl-wrapper" id="vinyl-container">
+            <!-- Gambar Vinyl berputar -->
+            <img src="piringan.png" alt="Piringan Hitam" class="vinyl-img">
+            
+            <!-- Tombol Play terpusat presisi di titik tengah (Pusat Vinyl) -->
+            <button class="play-btn" id="master-play-btn" aria-label="Mainkan Musik">
+                <!-- Icon Play (Awal) -->
+                <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <!-- Icon Pause (Tersembunyi) -->
+                <svg id="pause-icon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+        </div>
+
     </div>
 
+    <!-- ELEMEN AUDIO INTERNAL -->
     <audio id="audio-poem" src="puisi.mp3" preload="auto"></audio>
 
     <script>
@@ -292,8 +288,10 @@
         const playIcon = document.getElementById('play-icon');
         const pauseIcon = document.getElementById('pause-icon');
         const vinylContainer = document.getElementById('vinyl-container');
-        const lyricsRender = document.getElementById('lyrics-render');
-        const slides = document.querySelectorAll('.slide');
+        
+        // Slideshow Elements
+        const bgSlides = document.querySelectorAll('.slide-bg');
+        const fgSlides = document.querySelectorAll('.fg-slide');
 
         let wakeLockToken = null;
 
@@ -305,18 +303,25 @@
             }, 1500);
         });
 
-        // 2. Logic Automatic Background Slideshow
+        // 2. Logic Dual Slideshow (Background & Foreground)
         let currentSlideIndex = 0;
         function startSlideshow() {
             setInterval(() => {
-                slides[currentSlideIndex].classList.remove('active');
-                currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-                slides[currentSlideIndex].classList.add('active');
-            }, 4000); // Berganti gambar secara anggun setiap 4 detik
+                // Hapus kelas active dari slide saat ini
+                bgSlides[currentSlideIndex].classList.remove('active');
+                fgSlides[currentSlideIndex].classList.remove('active');
+                
+                // Maju ke indeks gambar selanjutnya
+                currentSlideIndex = (currentSlideIndex + 1) % bgSlides.length;
+                
+                // Tambahkan kelas active ke gambar selanjutnya
+                bgSlides[currentSlideIndex].classList.add('active');
+                fgSlides[currentSlideIndex].classList.add('active');
+            }, 4500); // Pergantian dilakukan setiap 4.5 detik untuk efek transisi perlahan
         }
         startSlideshow();
 
-        // 3. WAKE LOCK API (Mencegah Layar HP/Desktop Masuk Mode Sleep)
+        // 3. WAKE LOCK API (Mencegah Layar Mode Sleep)
         async function activateWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
@@ -334,100 +339,41 @@
             }
         }
 
-        // Meminta ulang Wake Lock jika user sempat pindah tab dan kembali lagi
+        // Restart Wake Lock saat membuka kembali tab browser
         document.addEventListener('visibilitychange', async () => {
             if (wakeLockToken !== null && document.visibilityState === 'visible') {
                 await activateWakeLock();
             }
         });
 
-        // 4. DATA TIMING LIRIK SUBTITLE
-        const dynamicLyrics = [
-            { start: 1.0, end: 4.0, text: "Aku memilih mencintaimu." },
-            { start: 4.0, end: 8.0, text: "Maka itu artinya, aku tuh siap untuk mencintai seluruhmu." },
-            { start: 8.0, end: 11.5, text: "Iya, seluruhmu. Kekuranganmu, ketidakmampuanmu," },
-            { start: 11.5, end: 16.0, text: "dan segala sesuatu dalam dirimu tanpa memintamu untuk jadi seperti apa yang aku mau." },
-            { start: 16.5, end: 20.0, text: "Kamu enggak perlu takut untuk menjadi dirimu sendiri." },
-            { start: 20.0, end: 23.0, text: "Sebab, aku menerimamu apa adanya." },
-            { start: 23.5, end: 27.0, text: "Sebab itu, kamu enggak perlu takut." },
-            { start: 27.0, end: 31.5, text: "Karena enggak ada satu orang pun yang bisa menggantikan tempatmu." },
-            { start: 31.5, end: 35.0, text: "Dalam dirimu, aku melihat keindahan." },
-            { start: 35.0, end: 40.5, text: "Aku menyaksikan betapa istimewanya ciptaan Tuhan dalam wujud kamu." },
-            { start: 41.0, end: 44.0, text: "Mungkin aku memang enggak kayak masa lalumu," },
-            { start: 44.0, end: 47.5, text: "pun kamu juga tidak seperti masa laluku." },
-            { start: 48.0, end: 52.0, text: "Tapi Tuhan tuh mempertemukan kita dengan sebuah alasan, bukan?" },
-            { start: 52.5, end: 56.5, text: "Kamu dengan kesederhanaanmu berhasil menggetarkan perasaanku." },
-            { start: 57.0, end: 100.5, text: "Aku ingin menemanimu, sepanjang hidupku." }, // 01:00,5 -> 60.5 + 40s = 100.5s
-            { start: 101.0, end: 104.5, text: "Mulai dari matahari terbit sampai matahari tenggelam." },
-            { start: 105.0, end: 110.0, text: "Mulai dari cerita-cerita yang menyenangkan sampai cerita-cerita yang menyedihkan." },
-            { start: 110.5, end: 115.0, text: "Mulai dari kaki kita yang masih kuat melangkah hingga nanti hanya tertatih." },
-            { start: 115.5, end: 120.0, text: "Mulai dari rambut kita hitam hingga memutih dan berantakan." },
-            { start: 120.5, end: 122.5, text: "Mulai saat ini..." },
-            { start: 123.0, end: 127.0, text: "aku enggak punya alasan untuk berhenti mencintaimu." }
-        ];
-
-        // 5. RUNNING LYRICS TIME UPDATE EVENT
-        let lastText = "";
-        audio.addEventListener('timeupdate', () => {
-            const currentTime = audio.currentTime;
-            let activeLine = dynamicLyrics.find(line => currentTime >= line.start && currentTime <= line.end);
-
-            if (activeLine) {
-                if (lastText !== activeLine.text) {
-                    lastText = activeLine.text;
-                    
-                    // Efek transisi halus (fade out -> ubah teks -> fade in)
-                    lyricsRender.classList.remove('show');
-                    setTimeout(() => {
-                        lyricsRender.innerText = activeLine.text;
-                        lyricsRender.classList.add('show');
-                    }, 250);
-                }
-            } else {
-                // Jika tidak ada lirik yang aktif di rentang waktu tersebut
-                if (currentTime > 0.5 && lyricsRender.classList.contains('show')) {
-                    lyricsRender.classList.remove('show');
-                    lastText = "";
-                }
-            }
-        });
-
-        // Tampilkan teks awal dengan mulus saat load pertama
-        setTimeout(() => { lyricsRender.classList.add('show'); }, 2000);
-
-        // 6. CONTROLS INTERACTION LOGIC
+        // 4. CONTROLS INTERACTION LOGIC
         playBtn.addEventListener('click', async () => {
             if (audio.paused) {
-                // Mainkan Audio & Efek Animasi Musik
+                // Memutar lagu & Menjalankan animasi rotasi vinyl
                 audio.play();
                 playIcon.style.display = 'none';
                 pauseIcon.style.display = 'block';
                 vinylContainer.classList.add('playing');
                 
-                // Aktifkan Fitur Anti-Sleep Mode
+                // Mengaktifkan fitur agar layar terus menyala
                 await activateWakeLock();
             } else {
-                // Jeda Audio & Efek Animasi Musik
+                // Menjeda lagu & rotasi vinyl
                 audio.pause();
                 playIcon.style.display = 'block';
                 pauseIcon.style.display = 'none';
                 vinylContainer.classList.remove('playing');
                 
-                // Matikan Fitur Anti-Sleep saat di-pause
+                // Menonaktifkan wake lock jika lagu dijeda
                 releaseWakeLock();
             }
         });
 
-        // Reset Tampilan Player Jika Audio Selesai Berputar
+        // Event saat lagu telah selesai
         audio.addEventListener('ended', () => {
             playIcon.style.display = 'block';
             pauseIcon.style.display = 'none';
             vinylContainer.classList.remove('playing');
-            lyricsRender.classList.remove('show');
-            setTimeout(() => {
-                lyricsRender.innerText = "Terima kasih telah mendengarkan seluruh hatiku...";
-                lyricsRender.classList.add('show');
-            }, 400);
             releaseWakeLock();
         });
     </script>
