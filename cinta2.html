@@ -30,47 +30,46 @@
             justify-content: center;
             align-items: center;
             overflow-x: hidden;
+            background: radial-gradient(circle at center, #8a131a 0%, #5a090f 100%);
             animation: fadeIn 1.5s ease-in-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .main-container {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 100%;
             padding: 20px;
         }
 
-        /* Container utama buket dengan rasio 1536x1024 */
+        /* Pembungkus Buket (Rasio 1536x1024 / 3:2) */
         .bouquet-wrapper {
             position: relative;
-            width: 90vw;
-            max-width: 500px;
-            aspect-ratio: 1536 / 1024;
+            width: 85vw;
+            max-width: 480px;
+            aspect-ratio: 1.5 / 1; 
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 30px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            animation: floatBouquet 4s ease-in-out infinite;
         }
 
-        /* SVG untuk Teks Melingkar di sekitar buket */
-        .text-svg {
-            position: absolute;
-            top: -20%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
-            z-index: 15;
-            pointer-events: none;
-            filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.3));
+        @keyframes floatBouquet {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
-        .buket-img {
+        /* Lapisan Gambar */
+        .layer-img {
             position: absolute;
             top: 0;
             left: 0;
@@ -79,17 +78,18 @@
             object-fit: contain;
         }
 
-        .buket-belakang {
+        .layer-back {
             z-index: 1;
-            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.3));
+            filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.5));
         }
 
-        .buket-depan {
+        .layer-front {
             z-index: 10;
+            filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.2));
         }
 
-        /* Container untuk foto-foto yang diselipkan */
-        .photo-container {
+        /* Area Foto di Tengah Buket */
+        .photos-area {
             position: absolute;
             top: 0;
             left: 0;
@@ -98,61 +98,88 @@
             z-index: 5;
         }
 
-        .flower-photo {
+        .pic {
             position: absolute;
-            width: 26%;
-            border-radius: 6px;
-            border: 3px solid #fff; /* Efek bingkai polaroid tipis */
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-            transition: transform 0.4s ease;
+            width: 25%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            border: 4px solid #fff;
+            border-bottom: 12px solid #fff; /* Efek polaroid klasik */
+            border-radius: 4px;
+            box-shadow: 2px 8px 15px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-color: #fff;
+            cursor: pointer;
         }
 
-        .flower-photo:hover {
-            z-index: 20;
-            transform: scale(1.1) translateY(-10px) !important;
+        .pic:hover {
+            z-index: 20 !important;
+            transform: scale(1.15) translateY(-15px) !important;
+            box-shadow: 5px 15px 25px rgba(0,0,0,0.6);
         }
 
-        /* Posisi foto: bisa disesuaikan nilainya jika kurang pas dengan lengkungan buket */
-        .photo1 {
-            top: 28%;
-            left: 14%;
-            transform: rotate(-18deg);
-        }
-
-        .photo2 {
-            top: 15%;
-            left: 36%;
-            width: 28%;
-            transform: rotate(2deg);
+        /* Penataan Posisi 3 Foto yang Rapi */
+        .p1 {
+            top: 18%;
+            left: 18%;
+            transform: rotate(-15deg);
             z-index: 6;
         }
 
-        .photo3 {
-            top: 25%;
-            right: 14%;
+        .p2 {
+            top: 6%;
+            left: 50%;
+            width: 28%; /* Foto tengah sedikit lebih besar */
+            transform: translateX(-50%) rotate(0deg);
+            z-index: 7;
+        }
+
+        .p3 {
+            top: 18%;
+            right: 18%;
             transform: rotate(15deg);
+            z-index: 6;
+        }
+
+        /* Teks Melingkar Rapi di Sekitar Buket */
+        .text-svg {
+            position: absolute;
+            top: -30%;
+            left: -15%;
+            width: 130%;
+            height: 130%;
+            z-index: 2;
+            pointer-events: none;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));
         }
 
         /* Tombol Next */
         .btn-next-text {
-            background: rgba(229, 182, 182, 0.2);
+            position: relative;
+            z-index: 20;
+            margin-top: 40px;
+            background: rgba(229, 182, 182, 0.15);
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
-            padding: 10px 30px;
-            border-radius: 25px;
+            padding: 10px 35px;
+            border-radius: 30px;
             font-size: 1rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
             cursor: pointer;
             text-decoration: none;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
             transition: all 0.3s ease;
-            z-index: 20;
-            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
         }
 
         .btn-next-text:hover {
             background: var(--accent-color);
             color: var(--bg-color);
-            transform: scale(1.05);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(229, 182, 182, 0.4);
         }
 
     </style>
@@ -163,33 +190,33 @@
         
         <div class="bouquet-wrapper">
             
-            <!-- Teks melengkung berbentuk arc di atas buket -->
+            <!-- Teks melengkung yang membingkai atas buket -->
             <svg viewBox="0 0 200 200" class="text-svg">
-                <!-- Path A (Arc): Membuat lengkungan elips yang mengelilingi sisi atas buket -->
-                <path id="loveCurve" d="M 15 150 A 90 100 0 0 1 185 150" fill="transparent" />
+                <!-- Lengkungan kubik yang halus dari kiri ke kanan -->
+                <path id="neatCurve" d="M 20 140 C 30 20, 170 20, 180 140" fill="transparent" />
                 <text>
-                    <textPath href="#loveCurve" startOffset="50%" text-anchor="middle" fill="#e5b6b6" font-family="'Dancing Script', cursive" font-size="12" letter-spacing="1">
-                        Aku cinta kamu • Aku sayang kamu • Aku cinta kamu
+                    <textPath href="#neatCurve" startOffset="50%" text-anchor="middle" fill="#e5b6b6" font-family="'Dancing Script', cursive" font-size="11.5" letter-spacing="1.5">
+                        Aku Cinta Kamu ~ Aku Sayang Kamu ~ Aku Cinta Kamu
                     </textPath>
                 </text>
             </svg>
 
-            <!-- Aset buket layer bawah -->
-            <img src="buketbelakang.png" alt="Bagian Belakang Buket" class="buket-img buket-belakang">
+            <!-- Aset layer paling belakang -->
+            <img src="buketbelakang.png" alt="Buket Belakang" class="layer-img layer-back">
 
-            <!-- Foto orang di dalam buket (layer tengah) -->
-            <div class="photo-container">
-                <img src="orang1.jpg" alt="Foto Kenangan 1" class="flower-photo photo1">
-                <img src="orang2.jpg" alt="Foto Kenangan 2" class="flower-photo photo2">
-                <img src="orang3.jpg" alt="Foto Kenangan 3" class="flower-photo photo3">
+            <!-- 3 Foto tersusun rapi di tengah -->
+            <div class="photos-area">
+                <img src="orang1.jpg" alt="Foto 1" class="pic p1">
+                <img src="orang2.jpg" alt="Foto 2" class="pic p2">
+                <img src="orang3.jpg" alt="Foto 3" class="pic p3">
             </div>
 
-            <!-- Aset buket layer atas (menutupi bagian bawah foto) -->
-            <img src="buketdepan.png" alt="Bagian Depan Buket" class="buket-img buket-depan">
+            <!-- Aset layer depan menutupi ujung bawah foto -->
+            <img src="buketdepan.png" alt="Buket Depan" class="layer-img layer-front">
             
         </div>
 
-        <!-- Tombol Lanjut ke halaman berikutnya -->
+        <!-- Tombol Lanjut ke cinta3.html -->
         <div class="btn-next-text" onclick="window.location.href='cinta3.html'">NEXT</div>
 
     </div>
