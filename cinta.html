@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untuk Maryana Isti Pranandani</title>
+    <style>
+        /* Mengambil font romantis dari Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital@0;1&display=swap');
+
+        :root {
+            /* Warna merah maroon gelap menyesuaikan gambar contoh */
+            --bg-color: #790e15; 
+            --text-color: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Playfair Display', serif;
+            overflow: hidden; /* Mencegah scroll saat transisi halaman */
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- STRUKTUR HALAMAN & TRANSISI --- */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            /* Transisi fade yang lambat dan romantis */
+            transition: opacity 1.5s ease-in-out, visibility 1.5s ease-in-out;
+        }
+
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+
+        /* --- HALAMAN 1 (SAMPUL) --- */
+        #page-1 {
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            /* Ukuran font dinamis: lebih kecil di HP, lebih besar di Desktop */
+            font-size: clamp(2.5rem, 6vw, 4.5rem); 
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .envelope-container {
+            position: relative;
+            width: 100%;
+            /* Batas maksimal ukuran desktop agar tidak pecah/kebesaran */
+            max-width: 650px; 
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Menjaga proporsi amplop 2400 x 1690 */
+            aspect-ratio: 2400 / 1690;
+        }
+
+        .envelope-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.4)); /* Bayangan lembut di belakang amplop */
+        }
+
+        .stamp-btn {
+            position: absolute;
+            /* Ukuran stempel dinamis proporsional dengan amplop */
+            width: 22%; 
+            max-width: 180px;
+            cursor: pointer;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Animasi detak jantung ringan */
+            animation: heartbeat 2.5s infinite;
+            filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.5));
+        }
+
+        /* Efek saat stempel disentuh/ditekan */
+        .stamp-btn:hover, .stamp-btn:active {
+            animation: none; 
+            transform: translate(-50%, -50%) scale(1.08);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin-top: 2.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            15% { transform: translate(-50%, -50%) scale(1.06); }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            45% { transform: translate(-50%, -50%) scale(1.06); }
+            60% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* --- HALAMAN 2 (KOSONG) --- */
+        #page-2 {
+            background-color: var(--bg-color);
+            /* Anda bisa mengatur style khusus untuk halaman 2 di sini nanti */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="page-1" class="page active">
+        <h1>untuk Maryana Isti Pranandani</h1>
+        
+        <div class="envelope-container">
+            <img src="amplop.png" alt="Amplop Surat" class="envelope-bg">
+            <img src="stempel.png" alt="Buka Surat" class="stamp-btn" onclick="goToPage('page-2')">
+        </div>
+
+        <p class="subtitle">I got you something special.</p>
+    </div>
+
+    <div id="page-2" class="page">
+        </div>
+
+    <script>
+        function goToPage(targetPageId) {
+            // 1. Ambil halaman yang sedang aktif
+            const activePage = document.querySelector('.page.active');
+            
+            // 2. Hilangkan class 'active' agar efek fade-out berjalan
+            if(activePage) {
+                activePage.classList.remove('active');
+            }
+
+            // 3. Setelah delay transisi, munculkan halaman target dengan fade-in
+            setTimeout(() => {
+                document.getElementById(targetPageId).classList.add('active');
+            }, 800); // Delay 800ms memberikan kesan transisi perlahan dan tidak buru-buru
+        }
+    </script>
+
+</body>
+</html>
